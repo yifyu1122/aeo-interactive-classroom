@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="zh-Hant-TW" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1D6F58">
+  <title>AEO 人工生態系統最佳化演算法 · 互動式教材</title>
+  <script>
+    (function () {
+      try {
+        var savedTheme = localStorage.getItem('aeo_theme');
+        if (savedTheme === 'dark' || savedTheme === 'light') {
+          document.documentElement.setAttribute('data-theme', savedTheme);
+        } else {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="style.css?v=theme-20261122">
+  <link rel="stylesheet" href="lesson.css">
+</head>
+<body>
+
+  <!-- SVG 圖標符號庫 -->
+  <svg aria-hidden="true" class="defs" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <symbol id="icon-leaf" viewBox="0 0 24 24"><path d="M4 20C2 9 8 5 21 3c-1 12-5 17-15 15M4 20l12-12" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="icon-network" viewBox="0 0 24 24"><circle cx="6" cy="12" r="3" stroke="currentColor" fill="none" stroke-width="2"/><circle cx="18" cy="6" r="3" stroke="currentColor" fill="none" stroke-width="2"/><circle cx="18" cy="18" r="3" stroke="currentColor" fill="none" stroke-width="2"/><path d="m8.5 10.5 7-3.5m-7 6.5 7 3.5" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="icon-layers" viewBox="0 0 24 24"><path d="m2 7 10-5 10 5-10 5zM2 12l10 5 10-5M2 17l10 5 10-5" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-play" viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20" fill="currentColor"/></symbol>
+      <symbol id="icon-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" fill="currentColor"/><rect x="14" y="4" width="4" height="16" fill="currentColor"/></symbol>
+      <symbol id="icon-prev" viewBox="0 0 24 24"><polyline points="15,4 7,12 15,20" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round"/></symbol>
+      <symbol id="icon-next" viewBox="0 0 24 24"><polyline points="9,4 17,12 9,20" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round"/></symbol>
+      <symbol id="icon-reset" viewBox="0 0 24 24"><path d="M4 9a8 8 0 1 1 0 6M4 3v6h6" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round"/></symbol>
+      <symbol id="icon-sliders" viewBox="0 0 24 24"><path d="M3 6h7m4 0h7M3 12h12m4 0h2M3 18h3m4 0h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="6" r="2.5" stroke="currentColor" fill="none" stroke-width="2"/><circle cx="17" cy="12" r="2.5" stroke="currentColor" fill="none" stroke-width="2"/><circle cx="8" cy="18" r="2.5" stroke="currentColor" fill="none" stroke-width="2"/></symbol>
+    </defs>
+  </svg>
+
+  <!-- 全站頂部導覽列 -->
+  <header class="site-header">
+    <div class="wrap">
+      <div class="header-top">
+        <a class="brand" href="#top">
+          <span class="brand-badge">AEO</span>
+          <div class="brand-titles">
+            <strong>人工生態系統最佳化演算法</strong>
+            <small>ARTIFICIAL ECOSYSTEM-BASED OPTIMIZATION · 互動式教材</small>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="theme-toggle" id="themeToggle" type="button" aria-label="切換深淺色外觀" title="切換深淺色模式">
+            <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            <span class="theme-label">深色模式</span>
+          </button>
+          <button class="btn-outlined" id="settingsBtn">
+            <svg width="18" height="18"><use href="#icon-sliders"/></svg>
+            參數設定
+          </button>
+          <button class="btn-outlined" data-open="guide">操作指南</button>
+        </div>
+      </div>
+
+      <!-- 5-Unit Steps Navigation (臺大教材風格) -->
+      <nav class="steps" aria-label="教學單元導覽">
+        <button data-target="unit1" aria-selected="true">
+          <span class="n">01</span>
+          <b>認識生態系統</b>
+          <small>三大角色與探索利用</small>
+        </button>
+        <button data-target="unit2" aria-selected="false">
+          <span class="n">02</span>
+          <b>生產 Production</b>
+          <small>最佳解與隨機位置平衡</small>
+        </button>
+        <button data-target="unit3" aria-selected="false">
+          <span class="n">03</span>
+          <b>消費 Consumption</b>
+          <small>草食、肉食、雜食與比較</small>
+        </button>
+        <button data-target="unit4" aria-selected="false">
+          <span class="n">04</span>
+          <b>分解 Decomposition</b>
+          <small>基準擾動與貪婪選擇</small>
+        </button>
+        <button data-target="unit5" aria-selected="false">
+          <span class="n">05</span>
+          <b>演算法實驗室</b>
+          <small>虛擬碼對照與完整執行</small>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap" id="top">
+
+    <!-- =========================================================
+         單元 1：認識 AEO 生態系統
+         ========================================================= -->
+    <section id="unit1">
+      <div class="banner">
+        <p class="kicker">UNIT 01 / ECOSYSTEM INTUITION</p>
+        <h1>以自然界生態循環，啟發電腦搜尋最佳解</h1>
+        <p class="intro">
+          在真實大自然中，能量從太陽傳遞給植物（生產者），再被各類動物（消費者）攝取，最後殘留物經由細菌真菌（分解者）回歸大地。
+          Zhao、Wang 與 Zhang（2020）提出的 <strong>AEO 演算法</strong>，便將數值最佳化問題的「候選解」對應到這三種角色，透過角色的動態更替，巧妙兼顧演算法的「探索（Exploration）」與「利用（Exploitation）」。
+        </p>
+      </div>
+
+      <div class="role-cards">
+        <article class="role-card">
+          <h3><span style="color:var(--accent)">🌿</span> 生產者 (Producer)</h3>
+          <p>吸收外部能量。在演算法中，由<strong>目前適應值最差的個體</strong>擔任。它在目前最佳解與搜尋空間內隨機位置之間取凸組合，藉此進行全域探索，避免陷入死胡同。</p>
+          <div class="task"><strong>任務：</strong>宏觀探索（Exploration），把表現最差的個體拉到新區域重新嘗試。</div>
+        </article>
+
+        <article class="role-card">
+          <h3><span style="color:var(--accent-purple)">🦅</span> 消費者 (Consumer)</h3>
+          <p>動物個體之間互相學習、追蹤或捕食。分為<strong>草食者、肉食者、雜食者</strong>三種不同食性策略，隨機選取，參考生產者或其他更優秀的同伴，以位置差進行跳躍。</p>
+          <div class="task"><strong>任務：</strong>局部開採與族群互動（Exploitation + Search），向潛在更佳區域靠攏。</div>
+        </article>
+
+        <article class="role-card">
+          <h3><span style="color:var(--gold)">🍄</span> 分解者 (Decomposer)</h3>
+          <p>將各個體與<strong>當前全球最佳解</strong>的差異進行隨機高斯擾動。此階段以最佳解為基準出發，微調搜尋已知最優區域的細部結構。</p>
+          <div class="task"><strong>任務：</strong>細緻微調（Local Refinement），以貪婪法則評估並保留較佳位置。</div>
+        </article>
+      </div>
+
+      <!-- 探索與利用的概念卡 -->
+      <div class="panel">
+        <div class="panel-head">
+          <h3>核心挑戰：為什麼需要兼顧「探索」與「利用」？</h3>
+        </div>
+        <p style="color:var(--muted-fg); margin-bottom: 14px;">
+          最佳化演算法在複雜地貌中尋找谷底時，面臨兩難困境：
+        </p>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div style="background:var(--code-bg); padding:14px; border-radius:8px;">
+            <strong style="color:var(--accent)">探索 (Exploration)</strong>
+            <p style="font-size:0.9rem; margin-top:6px; color:var(--muted-fg);">
+              跳出舒適圈，往未知的遠處隨機搜尋。優點是有機會發現隱藏在深處的全域最優；缺點是如果探索過度，會像無頭蒼蠅一樣難以收斂。
+            </p>
+          </div>
+          <div style="background:var(--code-bg); padding:14px; border-radius:8px;">
+            <strong style="color:var(--accent-warm)">利用 (Exploitation)</strong>
+            <p style="font-size:0.9rem; margin-top:6px; color:var(--muted-fg);">
+              在目前已知最好的點附近進行地毯式細緻微調。優點是能精準找出谷底最低點；缺點是如果過早鎖定，就容易陷入局部陷阱無法自拔。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 探索問題 (Q&A) -->
+      <div class="qa-section">
+        <h3>探索問題 · 思考與判讀</h3>
+        <p class="sub">先根據生態常識與直覺猜猜看，再點擊展開閱讀演算法設計背後的道理。</p>
+        <ol class="qlist">
+          <li>
+            <p class="q-text">為什麼 AEO 要讓「目前適應值最差的個體」去擔任生產者，而不是讓最好的個體去？</p>
+            <details class="ans-details">
+              <summary>先猜猜看 ▾ 查看參考答案</summary>
+              <div class="ans-body">
+                如果讓最好的個體去進行劇烈的隨機探索，可能會失去辛苦找到的好位置；相反地，把目前全族群表現最差的個體（生產者）拿來做大幅度隨機躍遷，即便探索失敗也不可惜，成功了還能開闢全新搜尋方向，是極高效率的汰弱機制！
+              </div>
+            </details>
+          </li>
+          <li>
+            <p class="q-text">如果一個演算法只有「消費者互相靠近」的規則，容易發生什麼不良後果？</p>
+            <details class="ans-details">
+              <summary>先猜猜看 ▾ 查看參考答案</summary>
+              <div class="ans-body">
+                若所有個體都只朝著彼此或目前看似不錯的點聚攏，很快整個族群就會失去多樣性，縮成一團卡在某個「局部極小值（Local Minimum）」中動彈不得，這在演算法中稱為「早熟收斂（Premature Convergence）」。這正是為什麼 AEO 還需要生產者與分解者的隨機擾動機制。
+              </div>
+            </details>
+          </li>
+          <li>
+            <p class="q-text">三種角色在每一次演算法迭代中，執行的先後順序是如何安排的？</p>
+            <details class="ans-details">
+              <summary>先猜猜看 ▾ 查看參考答案</summary>
+              <div class="ans-body">
+                每一輪迭代開始時，先將全體依目標值從最差排到最好。接著依序進行：① 最差者執行「生產」；② 其它消費者依序執行「消費」（草食、肉食或雜食）；③ 記錄第一階段結束後的最佳解；④ 全體個體依該最佳解執行「分解」。最後更新全域紀錄，進入下一代。
+              </div>
+            </details>
+          </li>
+        </ol>
+      </div>
+
+      <div style="text-align: right; margin-top: 14px;">
+        <button class="btn-primary" data-jump="unit2">下一步：進入單元 2「生產 Production」 →</button>
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         單元 2：生產階段 Production
+         ========================================================= -->
+    <section id="unit2" hidden>
+      <div class="banner">
+        <p class="kicker">UNIT 02 / PRODUCTION EXPLORER</p>
+        <h1>生產 Production：最佳解與隨機位置的拔河</h1>
+        <p class="intro">
+          核心問題：<strong>「如果目前已經找到一個不錯的位置，還需要探索其他地方嗎？」</strong><br>
+          在生產階段，新生產者的候選位置是由「目前最佳解」與「界內隨機產生的位置」進行線性加權產生。透過控制權重係數 <code>a</code>，演算法能在「繼承既有經驗」與「探索嶄新天地」之間取得動態平衡。
+        </p>
+      </div>
+
+      <div class="grid">
+        <!-- 左欄：互動視覺圖形 -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>搜尋空間位置圖 · f(x) = x²</h3>
+            <span style="font-size:0.85rem; color:var(--muted-fg)">拖曳右側滑桿觀察位置變化</span>
+          </div>
+          <div class="stage">
+            <svg id="u2_svg" viewBox="0 0 620 240"></svg>
+          </div>
+          <div style="margin-top:14px;">
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:4px;">
+              <span>最佳解比重：<strong id="u2_sub_best">0.20</strong></span>
+              <span>隨機點比重：<strong id="u2_sub_rand">-3.80</strong></span>
+            </div>
+            <div class="weights-bar">
+              <div class="bar-best" id="u2_bar_best" style="width: 65%;">最佳解權重 0.65</div>
+              <div class="bar-rand" id="u2_bar_rand" style="width: 35%;">隨機點權重 0.35</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右欄：控制面板與公式 -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>參數調整與公式驗算</h3>
+          </div>
+
+          <div class="ctrl-group">
+            <div class="ctrl">
+              <label for="u2_slider_a">權重係數 a</label>
+              <input type="range" id="u2_slider_a" min="0" max="1" step="0.01" value="0.35">
+              <code id="u2_val_a">0.35</code>
+            </div>
+
+            <div class="ctrl">
+              <label for="u2_slider_t">迭代進度 t / T</label>
+              <input type="range" id="u2_slider_t" min="1" max="10" step="1" value="2">
+              <code id="u2_val_t">第 2 / 10 輪</code>
+            </div>
+
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <button class="btn-outlined" id="u2_btn_rand">重新抽取隨機點 x_rand</button>
+              <button class="btn-outlined" id="u2_btn_draw_a">依公式隨機重抽 a</button>
+            </div>
+          </div>
+
+          <div class="formula-card">
+            <h4>原論文公式 · 式 (1)～(3)</h4>
+            <pre>x_rand = L + r ⊙ (U − L)
+a = (1 − t / T) × r₁      (當前上限：<span id="u2_val_cap">0.80</span>)
+x'₁ = (1 − a) × xₙ + a × x_rand</pre>
+
+            <div class="sub-steps">
+              <div>• 最佳解 xₙ = <strong id="u2_sub_best_txt">0.20</strong></div>
+              <div>• 隨機點 x_rand = <strong id="u2_sub_rand_txt">-3.80</strong></div>
+              <div>• 代入計算：x'₁ = (1 − a)×xₙ + a×x_rand ≈ <strong style="color:var(--accent-warm)" id="u2_sub_new">0.00</strong></div>
+            </div>
+          </div>
+
+          <p style="font-size:0.88rem; color:var(--muted-fg);">
+            <strong>白話解說：</strong>
+            新生產者位置必定落在「最佳解」與「界內隨機點」的連線上。當 <code>a</code> 很大時，受隨機點牽引多，屬於大膽探索；當 <code>a</code> 很小時，緊貼最佳解，屬於保守開採。
+          </p>
+        </div>
+      </div>
+
+      <!-- 探索問題 (Q&A) -->
+      <div class="qa-section">
+        <h3>探索問題 · 思考與判讀</h3>
+        <p class="sub">動手拖動滑桿，再驗證你的預測。</p>
+        <ol class="qlist">
+          <li>
+            <p class="q-text">當 a 調到極端值 0 或 1 時，新生產者分別會落在哪裡？</p>
+            <details class="ans-details">
+              <summary>先猜猜看 ▾ 查看參考答案</summary>
+              <div class="ans-body">
+                當 <code>a = 0</code> 時，式子變成 <code>x'₁ = xₙ</code>，新生產者完全重疊在目前最佳解上；當 <code>a = 1</code> 時，式子變成 <code>x'₁ = x_rand</code>，完全變成一個界內隨機點。真實的 <code>a</code> 介於 0 與 1 之間，因此新解是兩點的凸組合（Convex Combination）。
+              </div>
+            </details>
+          </li>
+          <li>
+            <p class="q-text">為什麼公式要設計 <code>a = (1 - t/T) × r₁</code>，讓權重上限隨著迭代輪數增加而逐漸縮小？</p>
+            <details class="ans-details">
+              <summary>先猜猜看 ▾ 查看參考答案</summary>
+              <div class="ans-body">
+                在演算法搜尋前期（<code>t</code> 很小），族群尚未找到優良區域，因此 <code>(1 - t/T)</code> 接近 1，允許較大的 <code>a</code> 往外隨機大步探索；隨著搜尋到了後期（<code>t</code> 接近 <code>T</code>），<code>(1 - t/T)</code> 趨近於 0，強制 <code>a</code> 變小，使新生產者主要貼近目前最佳解進行細緻收斂，完美實現「先廣域探索、後精準開採」的原則。
+              </div>
+            </details>
+          </li>
+          <li>
+            <p class="q-text">如果算出的新位置 x'₁ 目標函數值比原先最差的點還要差，演算法會接受它嗎？</p>
+            <details class="ans-details">
+              <summary>先猜猜看 ▾ 查看參考答案</summary>
+              <div class="ans-body">
+                不會！AEO 採取嚴格的貪婪選擇規則（Greedy Selection）：只有當 <code>f(x'₁) &lt; f(x₁)</code>（新位置得到更佳目標值）時，才會接受更新；若新位置較差或相等，則保留原本的位置，確保演算法族群不會倒退。
+              </div>
+            </details>
+          </li>
+        </ol>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; margin-top:14px;">
+        <button class="btn-outlined" data-jump="unit1">← 回到單元 1</button>
+        <button class="btn-primary" data-jump="unit3">下一步：進入單元 3「消費與三種食性」 →</button>
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         單元 3：消費階段 Consumption
+         ========================================================= -->
+    <section id="unit3" hidden>
+      <div class="banner">
+        <p class="kicker">UNIT 03 / CONSUMPTION & DIET STRATEGIES</p>
+        <h1>消費 Consumption：草食、肉食、雜食三種移動策略</h1>
+        <p class="intro">
+          這是 AEO 最具特色的核心機制。排名在第 2 到第 n 名的個體都是消費者。
+          消費者會隨機採取三種食性之一來更新位置。請點選下方切換子單元，手動調整係數，直觀比較三種食性的運動特徵。
+        </p>
+      </div>
+
+      <!-- 子單元切換按鈕 -->
+      <div class="pills" role="tablist">
+        <button class="active" data-u3-tab="herb">🌿 草食者 Herbivore</button>
+        <button data-u3-tab="carn">🦅 肉食者 Carnivore</button>
+        <button data-u3-tab="omni">🐾 雜食者 Omnivore</button>
+        <button data-u3-tab="compare">⚖ 三種食性直接比較 Comparison</button>
+      </div>
+
+      <!-- 動態說明文字 -->
+      <div id="u3_intro_herb" class="panel" style="margin-bottom:18px; border-left:4px solid var(--accent)">
+        <p><strong>草食者規則：</strong>草食者只吃植物（生產者）。它計算自己與生產者的位置差，乘上消費係數 <code>C</code> 來決定下一步去哪裡。</p>
+      </div>
+      <div id="u3_intro_carn" class="panel" style="margin-bottom:18px; border-left:4px solid var(--accent-warm)" hidden>
+        <p><strong>肉食者規則：</strong>肉食者捕捉其他消費者。它只能挑選排名在自己前面的消費者 <code>x_j (2 ≤ j &lt; i)</code> 作為參考對象，以此位置差進行跳躍。</p>
+      </div>
+      <div id="u3_intro_omni" class="panel" style="margin-bottom:18px; border-left:4px solid var(--accent-purple)" hidden>
+        <p><strong>雜食者規則：</strong>雜食者葷素不拘。它同時計算與生產者的位置差、與另一位消費者的位置差，以隨機權重 <code>r₂</code> 加權混合後乘上 <code>C</code> 跳躍。</p>
+      </div>
+      <div id="u3_intro_compare" class="panel" style="margin-bottom:18px; border-left:4px solid var(--gold)" hidden>
+        <p><strong>三種食性直接比較：</strong>在相同起點個體、相同生產者、相同同伴與相同消費係數 <code>C</code> 條件下，觀察三種不同食性策略產生的位移向量差異。</p>
+      </div>
+
+      <div class="grid">
+        <!-- 左欄：SVG 軸線向量展示 -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>搜尋空間向量動態圖</h3>
+            <span style="font-size:0.85rem; color:var(--muted-fg)">箭頭表示位移方向與長度</span>
+          </div>
+          <div class="stage">
+            <svg id="u3_svg" viewBox="0 0 620 220"></svg>
+          </div>
+          <div id="u3_direction_note" class="decision-box accepted" style="margin-top:14px;">
+            <strong>移動方向提示：</strong>消費係數 C 的正負號決定是朝向參考點前進，或是背向參考點反衝！
+          </div>
+        </div>
+
+        <!-- 右欄：控制滑桿與公式代入 -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>係數調整與逐步代入</h3>
+          </div>
+
+          <div class="ctrl-group">
+            <div class="ctrl">
+              <label for="u3_slider_c">消費係數 C</label>
+              <input type="range" id="u3_slider_c" min="-2" max="2" step="0.05" value="-0.5">
+              <code id="u3_val_c">-0.50</code>
+            </div>
+
+            <div class="ctrl" id="u3_row_r2" style="display:none;">
+              <label for="u3_slider_r2">雜食權重 r₂</label>
+              <input type="range" id="u3_slider_r2" min="0" max="1" step="0.05" value="0.4">
+              <code id="u3_val_r2">0.40</code>
+            </div>
+
+            <div class="ctrl">
+              <label for="u3_slider_xi">自身位置 xᵢ</label>
+              <input type="range" id="u3_slider_xi" min="-4" max="4" step="0.1" value="2.2">
+              <code id="u3_val_xi">2.20</code>
+            </div>
+
+            <div class="ctrl" id="u3_row_peer" style="display:none;">
+              <label for="u3_sel_peer">同伴 xⱼ</label>
+              <select id="u3_sel_peer" style="padding:4px 8px; border:1px solid var(--border); border-radius:5px; background:var(--card);">
+                <option value="0.6">P2 (位置 0.60, 排名 j=2)</option>
+                <option value="-0.5">P3 (位置 -0.50, 排名 j=3)</option>
+                <option value="1.8">P4 (位置 1.80, 排名 j=4)</option>
+              </select>
+              <span></span>
+            </div>
+
+            <div style="margin-top:6px;">
+              <button class="btn-outlined" id="u3_btn_rand_c">由標準常態隨機抽取 C</button>
+            </div>
+          </div>
+
+          <div class="formula-card">
+            <h4>公式代入紀錄</h4>
+            <div class="sub-steps">
+              <div>• 自身位置 xᵢ = <strong id="u3_sub_xi">2.20</strong></div>
+              <div>• 參考位置 1 (生產者) = <strong id="u3_sub_ref1">-1.20</strong></div>
+              <div id="u3_sub_peer_row">• 參考位置 2 (同伴) = <strong id="u3_sub_ref2">0.60</strong></div>
+              <div>• 位置差 Δ = <strong id="u3_sub_diff">3.40</strong></div>
+              <div>• 乘上消費係數 C = <strong id="u3_sub_c_txt">-0.50</strong></div>
+              <div>• 新位置 x' = xᵢ + C × Δ ≈ <strong style="color:var(--accent-warm)" id="u3_sub_new">0.50</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 探索問題 (Q&A) -->
+      <div class="qa-section">
+        <h3>探索問題 · 思考與判讀</h3>
+        <p class="sub">動手調整係數 C 與 r₂，再驗證你的觀察。</p>
+        <ol class="qlist">
+          <li>
+            <p class="q-text">如果消費係數 C 是負數（例如 C = -0.5），草食者會朝哪個方向移動？可以直接說「草食者往生產者移動」嗎？</p>
+            <details class="ans-details">
+              <summary>先猜猜看 ▾ 查看參考答案</summary>
+              <div class="ans-body">
+                不可以直接說草食者往生產者移動！因為公式是 <code>x' = xᵢ + C(xᵢ - x₁)</code>。位置差是 <code>(自己 - 生產者)</code>，如果 <code>C &gt; 0</code>，個體反而會沿著遠離生產者的方向向外探索；只有當 <code>C &lt; 0</code>（例如 -0.5）時，負號反轉了方向，個體才會朝向生產者靠近（例如走到兩點的中間）。
+              </div>
+            </details>
+          </li>
+          <li>
+            <p class="q-text">為什麼肉食者不能任意挑選參考對象，而必須符合 <code>2 ≤ j &lt; i</code> 的規則？排名第 2 的消費者為什麼不能當肉食者？</p>
+            <details class="ans-details">
+              <summary>先猜猜看 ▾ 查看參考答案</summary>
+              <div class="ans-body">
+                因為 AEO 的排序規則是由最差排到最好（x₁ 最差，xₙ 最好）。條件 <code>j &lt; i</code> 確保了肉食者只能參考排在自己前面的其他消費者。而排名第 2 的個體 <code>i = 2</code> 前面只有第 1 名的生產者，不存在其他消費者（<code>2 ≤ j &lt; 2</code> 無解），所以在完整 AEO 中第 2 名個體強制執行草食策略。
+              </div>
+            </details>
+          </li>
+          <li>
+            <p class="q-text">雜食者的權重 r₂ 如果接近 1，或是接近 0，分別會退化成什麼食性？</p>
+            <details class="ans-details">
+              <summary>先猜猜看 ▾ 查看參考答案</summary>
+              <div class="ans-body">
+                當 <code>r₂ = 1</code> 時，雜食者完全只參考生產者的位置差，行為完全等同於<strong>草食者</strong>；當 <code>r₂ = 0</code> 時，雜食者完全只參考另一位消費者的位置差，行為完全等同於<strong>肉食者</strong>。因此雜食者是兩者的平滑過渡加權！
+              </div>
+            </details>
+          </li>
+          <li>
+            <p class="q-text">雜食者的新位置是「生產者與同伴位置的直接平均」嗎？</p>
+            <details class="ans-details">
+              <summary>先猜猜看 ▾ 查看參考答案</summary>
+              <div class="ans-body">
+                不是！雜食者混合的是「兩組位置差」：<code>r₂(xᵢ - x₁) + (1 - r₂)(xᵢ - xⱼ)</code>，混合之後還要乘以隨機消費係數 <code>C</code>，最後再加上自己原本的位置 <code>xᵢ</code>。它代表的是複合的引導方向，並非簡單的點坐標平均。
+              </div>
+            </details>
+          </li>
+        </ol>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; margin-top:14px;">
+        <button class="btn-outlined" data-jump="unit2">← 回到單元 2</button>
+        <button class="btn-primary" data-jump="unit4">下一步：進入單元 4「分解 Decomposition」 →</button>
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         單元 4：分解階段 Decomposition
+         ========================================================= -->
+    <section id="unit4" hidden>
+      <div class="banner">
+        <p class="kicker">UNIT 04 / DECOMPOSITION REFINEMENT</p>
+        <h1>分解 Decomposition：圍繞全域最佳解的微調擾動</h1>
+        <p class="intro">
+          核心問題：<strong>「為什麼第一階段結束後的最佳解還需要被擾動？新解一定會變好嗎？」</strong><br>
+          在分解階段，全體個體不再以彼此為參考，而是通通改以「第一階段結束時產生的最佳解 <code>x_best</code>」為基準出發，根據自身與最佳解的差異施加高斯隨機擾動。
+        </p>
+      </div>
+
+      <div class="grid">
+        <!-- 左欄：SVG 擾動圖 -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>分解擾動向量圖 · 以最佳解為起點</h3>
+            <span style="font-size:0.85rem; color:var(--muted-fg)">擾動量 = D × (e·x_best − h·xᵢ)</span>
+          </div>
+          <div class="stage">
+            <svg id="u4_svg" viewBox="0 0 620 210"></svg>
+          </div>
+          <div id="u4_decision" class="decision-box accepted" style="margin-top:14px;">
+            <strong>✓ 接受更新 (Accept)</strong>
+            <p>新解目標值優於舊解，個體搬遷到新位置！</p>
+          </div>
+        </div>
+
+        <!-- 右欄：控制項與公式代入 -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>擾動參數與貪婪接受判斷</h3>
+          </div>
+
+          <div class="ctrl-group">
+            <div class="ctrl">
+              <label for="u4_slider_d">分解係數 D = 3u</label>
+              <input type="range" id="u4_slider_d" min="-3" max="3" step="0.1" value="1.2">
+              <code id="u4_val_d">1.20</code>
+            </div>
+
+            <div class="ctrl">
+              <label for="u4_slider_e">權重 e = r₃k − 1</label>
+              <input type="range" id="u4_slider_e" min="-1" max="1" step="0.05" value="0.5">
+              <code id="u4_val_e">0.50</code>
+            </div>
+
+            <div class="ctrl">
+              <label for="u4_slider_h">權重 h = 2r₃ − 1</label>
+              <input type="range" id="u4_slider_h" min="-1" max="1" step="0.05" value="0.4">
+              <code id="u4_val_h">0.40</code>
+            </div>
+
+            <div style="margin-top:6px;">
+              <button class="btn-outlined" id="u4_btn_rand">依論文公式隨機重抽 (u, r₃, k)</button>
+            </div>
+          </div>
+
+          <div class="formula-card">
+            <h4>原論文公式 · 式 (9)～(12)</h4>
+            <pre>D = 3u  (u 取自標準常態)
+e = r₃ × k − 1  (k 取 1 或 2)
+h = 2 × r₃ − 1
+x' = x_best + D × (e × x_best − h × xᵢ)</pre>
+
+            <div class="sub-steps">
+              <div>• 基準最佳解 x_best = <strong id="u4_sub_best">0.10</strong></div>
+              <div>• 目前個體位置 xᵢ = <strong id="u4_sub_xi">2.80</strong></div>
+              <div>• 計算擾動位移 = <strong id="u4_sub_perturb">-1.28</strong></div>
+              <div>• 候選新解 x' = x_best + 擾動位移 ≈ <strong style="color:var(--accent-warm)" id="u4_sub_new">-1.18</strong></div>
+            </div>
+          </div>
+
+          <p style="font-size:0.88rem; color:var(--muted-fg);">
+            <strong>白話解說：</strong>
+            分解階段以全族群目前已知最棒的點 <code>x_best</code> 作為錨點出發。擾動量大小由常態分佈亂數 <code>D</code> 控制，方向則取決於括號內的加權組合。最後透過貪婪法則嚴格檢驗，確保只有變得更優的解才能被保留。
+          </p>
+        </div>
+      </div>
+
+      <!-- 探索問題 (Q&A) -->
+      <div class="qa-section">
+        <h3>探索問題 · 思考與判讀</h3>
+        <p class="sub">觀察擾動結果，再閱讀參考答案。</p>
+        <ol class="qlist">
+          <li>
+            <p class="q-text">為什麼分解階段不保證新位置一定比舊位置更好？</p>
+            <details class="ans-details">
+              <summary>先猜猜看 ▾ 查看參考答案</summary>
+              <div class="ans-body">
+                因為分解係數 <code>D = 3u</code> 是從標準常態分佈隨機抽取的，有時候擾動過大會直接跳出好的區域，甚至跳到分數很差的高處。因此提出新位置只是「大膽嘗試」，必須搭配「嚴格評估」：只有 <code>f(新) &lt; f(舊)</code> 才會接受，否則個體保留原位。
+              </div>
+            </details>
+          </li>
+          <li>
+            <p class="q-text">分解階段和前一階段（消費階段）最大的不同是什麼？</p>
+            <details class="ans-details">
+              <summary>先猜猜看 ▾ 查看參考答案</summary>
+              <div class="ans-body">
+                消費階段的起點是「個體自己原本的位置 <code>xᵢ</code>」，朝著生產者或同伴的方向跳躍；而分解階段的起點直接切換成「目前全球最佳解 <code>x_best</code>」，等於全族群的所有個體都把目光轉向最成功的代表，在它周圍鋪開一張擾動搜尋網！
+              </div>
+            </details>
+          </li>
+          <li>
+            <p class="q-text">如果分解階段計算出的新位置超出了搜尋範圍邊界 [L, U]，演算法會如何處理？</p>
+            <details class="ans-details">
+              <summary>先猜猜看 ▾ 查看參考答案</summary>
+              <div class="ans-body">
+                根據論文第 2.2.3 節規範，當任一維度越界時，演算法會在上下界範圍 <code>[L, U]</code> 內重新均勻隨機抽取一個合法位置，再進行目標函數評估，確保所有候選解始終落在合法定義域內。
+              </div>
+            </details>
+          </li>
+        </ol>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; margin-top:14px;">
+        <button class="btn-outlined" data-jump="unit3">← 回到單元 3</button>
+        <button class="btn-primary" data-jump="unit5">下一步：進入單元 5「演算法實驗室」 →</button>
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         單元 5：完整演算法實驗室 (Full Algorithm Lab & Pseudocode)
+         ========================================================= -->
+    <section id="unit5" hidden>
+      <div class="banner">
+        <p class="kicker">UNIT 05 / FULL AEO EXPERIMENT & PSEUDOCODE</p>
+        <h1>AEO 演算法實驗室：全流程逐步追蹤與虛擬碼對照</h1>
+        <p class="intro">
+          將生產、消費、分解三個階段無縫結合。點選「下一步」或「開始播放」，
+          右側的 AEO 虛擬碼會同步高亮正在執行的步驟，讓你清楚掌握每一顆候選點的決策過程。
+        </p>
+      </div>
+
+      <!-- 主工作區：左邊視覺圖，右邊虛擬碼與步驟解說 -->
+      <div class="grid">
+        <!-- 左欄：搜尋空間與播放器 -->
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>搜尋空間視覺化</h3>
+              <span style="font-size:0.82rem; color:var(--muted-fg)" id="fnName">一維平方函數</span>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-outlined" id="dim1">1D 一維</button>
+              <button class="btn-outlined" id="dim2">2D 二維</button>
+            </div>
+          </div>
+
+          <!-- 頂部即時數值摘要 -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; background:var(--code-bg); padding:10px 14px; border-radius:8px;">
+            <div>
+              <small style="color:var(--muted-fg); font-size:0.75rem; font-weight:700;">目前最佳目標值</small>
+              <strong style="font-size:1.15rem; color:var(--accent); font-family:var(--mono);" id="bestNum">—</strong>
+            </div>
+            <div>
+              <small style="color:var(--muted-fg); font-size:0.75rem; font-weight:700;">迭代進度</small>
+              <strong style="font-size:1.15rem; color:var(--fg); font-family:var(--mono);" id="genNum">0 / 12</strong>
+            </div>
+          </div>
+
+          <!-- SVG 繪圖舞台 -->
+          <div id="plot" class="stage" style="min-height:280px;"></div>
+
+          <!-- 播放控制台 -->
+          <div class="transport">
+            <div class="transport-top">
+              <div>
+                <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--accent); margin-right:6px;"></span>
+                <strong id="status">準備就緒</strong>
+              </div>
+              <span id="stepCount" style="font-family:var(--mono); font-size:0.82rem;">0 / 0 步</span>
+            </div>
+
+            <input type="range" id="timeline" min="0" value="0" style="width:100%; accent-color:var(--accent); cursor:pointer;">
+
+            <div class="transport-btns">
+              <button class="btn-primary" id="playBtn">
+                <svg width="16" height="16"><use href="#icon-play"/></svg>
+                <span>開始</span>
+              </button>
+              <button class="btn-icon" id="prevBtn" title="上一步 (←)">
+                <svg width="16" height="16"><use href="#icon-prev"/></svg>
+              </button>
+              <button class="btn-outlined" id="nextBtn" title="下一步 (→)">
+                <span>下一步</span>
+                <svg width="16" height="16"><use href="#icon-next"/></svg>
+              </button>
+              <button class="btn-icon" id="resetBtn" title="重設 (R)">
+                <svg width="16" height="16"><use href="#icon-reset"/></svg>
+              </button>
+              <select id="speed" title="播放速度">
+                <option value="0.5">0.5×</option>
+                <option value="1" selected>1.0×</option>
+                <option value="2">2.0×</option>
+                <option value="4">4.0×</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右欄：虛擬碼同步與步驟解說 -->
+        <div>
+          <!-- 虛擬碼同步展示卡片 -->
+          <div class="pseudocode-box">
+            <div class="head">
+              <span>AEO 演算法虛擬碼 (PSEUDOCODE)</span>
+              <span>同步高亮執行行</span>
+            </div>
+            <ol class="code" id="aeo_pseudocode">
+              <li>Initialize population P within [L, U], evaluate f(x)</li>
+              <li>For iteration t = 1 to T:</li>
+              <li>&nbsp;&nbsp;Sort population from worst to best (x₁ worst, xₙ best)</li>
+              <li>&nbsp;&nbsp;Update producer x₁ using Eq. (1)-(3)</li>
+              <li>&nbsp;&nbsp;For each consumer i = 2 to n: (Herb / Carn / Omni)</li>
+              <li>&nbsp;&nbsp;&nbsp;&nbsp;If f(x'ᵢ) &lt; f(xᵢ) then xᵢ ← x'ᵢ (Greedy selection)</li>
+              <li>&nbsp;&nbsp;Record current best solution x_best</li>
+              <li>&nbsp;&nbsp;For each individual i = 1 to n: Decompose using Eq. (9)-(12)</li>
+              <li>&nbsp;&nbsp;&nbsp;&nbsp;If f(x'ᵢ) &lt; f(xᵢ) then xᵢ ← x'ᵢ</li>
+              <li>End For; Return best solution found</li>
+            </ol>
+          </div>
+
+          <!-- 詳細步驟解說面板 -->
+          <div class="panel">
+            <div class="panel-head">
+              <h3>步驟詳細紀錄</h3>
+              <button class="btn-outlined" id="follow" style="padding:4px 8px; font-size:0.8rem;" hidden>跟隨播放 ↗</button>
+            </div>
+            <div id="lesson"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 候選解觀測表與食性分布 -->
+      <div class="panel" style="margin-bottom:24px;">
+        <div class="panel-head">
+          <h3>候選解觀測表</h3>
+          <span id="popInfo" style="font-size:0.85rem; color:var(--muted-fg)"></span>
+        </div>
+        <div style="display:grid; grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr); gap: 18px;">
+          <div class="scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>個體</th>
+                  <th>位置 x</th>
+                  <th>目標值 f(x)</th>
+                  <th>目前狀態</th>
+                  <th>詳細紀錄</th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+          <div style="background:var(--code-bg); padding:16px; border-radius:8px;">
+            <strong style="font-size:0.85rem; color:var(--muted-fg); display:block; margin-bottom:8px;">本輪食性分布統計</strong>
+            <div id="diet" style="margin-bottom:10px;"></div>
+            <p id="dietNote" style="font-size:0.82rem; color:var(--muted-fg); line-height:1.5;"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 收斂曲線與實驗比較 -->
+      <div class="panel" style="margin-bottom:24px;">
+        <div class="panel-head">
+          <h3>收斂曲線與多次實驗比較</h3>
+          <button class="btn-outlined" id="csv">匯出 CSV 紀錄 ↓</button>
+        </div>
+        <p id="labDesc" style="color:var(--muted-fg); font-size:0.9rem; margin-bottom:12px;"></p>
+        <div id="conv" style="margin-bottom:16px;"></div>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <button class="btn-primary" id="saveRun">保存本次設定作比較</button>
+          <button class="btn-outlined" id="rerun">重新執行</button>
+          <button class="btn-outlined" id="clearRuns">清除所有比較</button>
+        </div>
+        <p id="compareList" style="font-size:0.86rem; color:var(--muted-fg); margin-top:10px;"></p>
+
+        <details style="margin-top:16px;">
+          <summary style="font-weight:600; cursor:pointer; color:var(--accent);">檢視逐代最佳目標值與評估次數明細</summary>
+          <div class="scroll" style="margin-top:10px;">
+            <table>
+              <thead>
+                <tr><th>迭代代次 t</th><th>歷代最佳目標值</th><th>累計評估次數 (FE)</th></tr>
+              </thead>
+              <tbody id="hist"></tbody>
+            </table>
+          </div>
+        </details>
+      </div>
+
+      <!-- 探索問題 (Q&A) -->
+      <div class="qa-section">
+        <h3>探索問題 · 演算法總結</h3>
+        <p class="sub">完整運行 AEO 後，檢視你對整體搜尋動態的理解。</p>
+        <ol class="qlist">
+          <li>
+            <p class="q-text">觀察連續播放時的候選點分布，為什麼隨著迭代進行，大部分的點會逐漸向同一個區域聚集？</p>
+            <details class="ans-details">
+              <summary>先猜猜看 ▾ 查看參考答案</summary>
+              <div class="ans-body">
+                因為在每一次消費階段，草食者與雜食者都在參考生產者；肉食者在參考比自己好的同伴；而在分解階段，全體個體更是以全球最佳解 <code>x_best</code> 為基準擾動。貪婪選擇會持續保留在低窪處的優秀點，導致整個族群的位置分佈迅速向最有潛力的谷底凝聚。
+              </div>
+            </details>
+          </li>
+          <li>
+            <p class="q-text">切換到「二維 Rastrigin 函數」跑跑看。為什麼完整 AEO 有時會卡在某個小山谷，而無法每次都找到 (0,0) 的絕對谷底？</p>
+            <details class="ans-details">
+              <summary>先猜猜看 ▾ 查看參考答案</summary>
+              <div class="ans-body">
+                Rastrigin 函數具有密密麻麻的局部極小值（Local Minima）。這類啟發式演算法本質上屬於隨機近似最佳化，並非數學上的穷舉法，無法在有限迭代次數內保證 100% 找到全域最佳解。若要提升跳出率，通常可以增大族群大小 <code>n</code> 或多次獨立執行。
+              </div>
+            </details>
+          </li>
+          <li>
+            <p class="q-text">當族群大小 n 從 8 增加到 20 時，每一輪迭代花費的「函數評估次數（Function Evaluations）」會如何變化？</p>
+            <details class="ans-details">
+              <summary>先猜猜看 ▾ 查看參考答案</summary>
+              <div class="ans-body">
+                初始化階段評估 <code>n</code> 次；每輪生產評估 1 次，消費評估 <code>n - 1</code> 次，分解評估 <code>n</code> 次。因此每一輪合計新增 <code>2n</code> 次評估！總評估次數為 <code>n + 2nT</code>。當 <code>n</code> 增加時，搜尋空間取樣更廣泛，但每輪的計算成本也成正比上升。
+              </div>
+            </details>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 頁腳 -->
+  <footer class="wrap" style="border-top: 1px solid var(--border); padding: 24px 0 36px; margin-top: 40px; display:flex; justify-content:space-between; font-size:0.86rem; color:var(--muted-fg);">
+    <div>
+      <strong>AEO 人工生態系統最佳化演算法 · 互動式教材</strong>
+      <p style="margin-top:4px;">依據 Zhao, Wang & Zhang (2020) 原文第 2.2 節與式 (1)～(12) 實作。</p>
+    </div>
+    <div>
+      <a href="https://doi.org/10.1007/s00521-019-04452-x" target="_blank" rel="noopener">原始論文 DOI ↗</a>
+    </div>
+  </footer>
+
+  <!-- 參數設定對話框 -->
+  <dialog id="settings">
+    <form id="parameterForm">
+      <div class="dialog-head">
+        <h2>演算法實驗參數設定</h2>
+        <button type="button" data-close="settings" aria-label="關閉">✕</button>
+      </div>
+      <p style="font-size:0.88rem; color:var(--muted-fg); margin-bottom:14px;">
+        調整設定後點擊套用，將從第 0 輪開始重新搜尋。同一組設定與種子（Seed）保證重現相同軌跡。
+      </p>
+
+      <label class="field">
+        目標函數
+        <select id="fn">
+          <option value="square">一維平方函數 f(x) = x²</option>
+          <option value="multi">一維 Rastrigin 多局部極值函數</option>
+          <option value="sphere">二維 Sphere 球面函數</option>
+          <option value="rastrigin">二維 Rastrigin 多局部極值函數</option>
+        </select>
+      </label>
+      <p id="fnMeta" style="font-size:0.82rem; color:var(--muted-fg); background:var(--code-bg); padding:6px 10px; border-radius:5px; margin-bottom:12px;"></p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <label class="field">族群大小 n<input type="number" id="n" min="3" max="40" step="1"></label>
+        <label class="field">迭代上限 T<input type="number" id="T" min="1" max="150" step="1"></label>
+        <label class="field">搜尋下界 L<input type="number" id="L" step="any"></label>
+        <label class="field">搜尋上界 U<input type="number" id="U" step="any"></label>
+      </div>
+
+      <label class="field">隨機種子 Seed<input type="number" id="seed" min="0" max="4294967295" step="1"></label>
+
+      <fieldset style="border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin:14px 0;">
+        <legend style="font-size:0.82rem; font-weight:700;">顯示偏好</legend>
+        <label style="display:flex; align-items:center; gap:6px; font-size:0.86rem; margin:4px 0;">
+          <input type="checkbox" id="formulas" checked> 顯示計算公式與逐維代入
+        </label>
+        <label style="display:flex; align-items:center; gap:6px; font-size:0.86rem; margin:4px 0;">
+          <input type="checkbox" id="trails" checked> 顯示候選解移動軌跡
+        </label>
+        <label style="display:flex; align-items:center; gap:6px; font-size:0.86rem; margin:4px 0;">
+          <input type="checkbox" id="reduced"> 減少動畫效果 (Reduced Motion)
+        </label>
+      </fieldset>
+
+      <p id="paramError" style="color:var(--accent-warm); font-size:0.86rem; font-weight:600;"></p>
+      <div class="dialog-actions">
+        <span id="dirty" style="margin-right:auto; font-size:0.82rem; color:var(--accent-warm);"></span>
+        <button type="button" class="btn-outlined" data-close="settings">取消</button>
+        <button type="submit" class="btn-primary">套用並重新執行</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 操作指南對話框 -->
+  <dialog id="guide">
+    <div class="dialog-head">
+      <h2>操作指南與學習路徑</h2>
+      <button data-close="guide" aria-label="關閉">✕</button>
+    </div>
+    <ol style="padding-left:20px; line-height:1.7; font-size:0.92rem; color:var(--muted-fg);">
+      <li><strong>單元 1 建立直覺：</strong>先了解生態系統中三大角色的分工，理解為什麼最佳化演算法既需要大膽的「探索」也需要細緻的「開採」。</li>
+      <li><strong>單元 2 動手調權重：</strong>拖動生產權重 <code>a</code>，觀察新生產者如何受到最佳解與隨機探索點的拉扯，理解為何權重上限隨時間縮小。</li>
+      <li><strong>單元 3 比較三種食性：</strong>草食者參考生產者、肉食者參考同伴、雜食者混合兩者。特別注意消費係數 <code>C</code> 為負時朝參考點前進，為正時反方向探索。</li>
+      <li><strong>單元 4 觀察分解擾動：</strong>圍繞當前最佳解擾動，並觀察「貪婪法則」如何篩選新解，只接受變得更好的提案。</li>
+      <li><strong>單元 5 完整演算法實驗：</strong>按「下一步」逐步執行，對照右側高亮的虛擬碼，觀察多個候選點在 1D 或 2D 搜尋空間的收斂過程！</li>
+    </ol>
+    <div style="text-align:right; margin-top:16px;">
+      <button class="btn-primary" data-close="guide">開始探索！</button>
+    </div>
+  </dialog>
+
+  <!-- 提示訊息 Toast -->
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <!-- 載入腳本 -->
+  <script src="engine.js"></script>
+  <script src="plot.js?v=theme-20261122"></script>
+  <script src="lesson.js"></script>
+  <script src="units.js?v=theme-20261122"></script>
+  <script src="app.js?v=theme-20261122"></script>
+</body>
+</html>

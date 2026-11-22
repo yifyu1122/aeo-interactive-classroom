@@ -1,0 +1,184 @@
+/* AEO 教學解說面板專用樣式 (lesson.css)
+ * 100% 採用語意化 Design Tokens，完美相容淺色與深色模式
+ */
+
+.ls-shell {
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.62;
+  min-width: 0;
+}
+.ls-shell * { box-sizing: border-box; }
+.ls-shell code, .ls-shell pre, .ls-shell dd { font-variant-numeric: tabular-nums; }
+.ls-shell code, .ls-shell pre { font-family: var(--mono); }
+
+.ls-now > span, .ls-event-name, .ls-pick label, .ls-shell small {
+  color: var(--muted-fg);
+  font-size: 12px;
+  letter-spacing: 0.025em;
+}
+.ls-now p {
+  margin: 6px 0 14px;
+  color: var(--fg);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.65;
+}
+
+.ls-kv { margin: 10px 0; }
+.ls-kv > div {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, 1fr) minmax(0, 1.25fr);
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.ls-kv dt {
+  color: var(--muted-fg);
+  font-size: 13px;
+  font-weight: 600;
+}
+.ls-kv dd {
+  overflow-wrap: anywhere;
+  margin: 0;
+  text-align: right;
+  color: var(--fg);
+}
+.ls-kv dd code {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.ls-note {
+  margin: 10px 0;
+  color: var(--muted-fg);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.ls-event-name, .ls-pick {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.ls-pick {
+  margin: 12px 0;
+  padding: 10px 14px;
+  flex-wrap: wrap;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.ls-pick label {
+  display: grid;
+  gap: 3px;
+  margin-left: auto;
+}
+.ls-pick select {
+  max-width: 100%;
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  padding: 5px 8px;
+  font: inherit;
+  border-radius: 6px;
+}
+
+/* 接受與保留決策框 */
+.ls-decision {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin: 10px 0;
+}
+.ls-decision.positive {
+  color: var(--success-fg);
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+}
+.ls-decision.neutral {
+  color: var(--muted-fg);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+}
+.ls-decision span { font-variant-numeric: tabular-nums; }
+
+/* 生產權重長條 */
+.ls-weights {
+  margin: 14px 0;
+  color: var(--muted-fg);
+  font-size: 12px;
+}
+.ls-weights > div {
+  height: 8px;
+  position: relative;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  margin: 6px 0;
+}
+.ls-weights i, .ls-weights div b {
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 9px;
+}
+.ls-weights i {
+  background: var(--border);
+}
+.ls-weights div b {
+  background: var(--primary);
+}
+
+/* 算式與代入區塊 */
+.ls-shell h4 {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  margin: 14px 0 6px;
+  color: var(--muted-fg);
+  font-weight: 700;
+}
+.ls-math pre, .ls-details pre, .ls-lines {
+  margin: 6px 0 10px;
+  background: var(--code-bg);
+  color: var(--code-fg);
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.65;
+}
+.ls-lines { display: grid; gap: 4px; }
+.ls-lines code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--code-fg);
+}
+
+.ls-details {
+  margin: 14px 0 0;
+  color: var(--muted-fg);
+}
+.ls-details > summary {
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--fg);
+}
+.ls-details pre {
+  max-height: 240px;
+  overflow: auto;
+  font-size: 12px;
+}
