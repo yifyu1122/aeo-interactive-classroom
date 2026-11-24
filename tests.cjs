@@ -3,6 +3,7 @@
 const assert=require('node:assert/strict');
 const test=require('node:test');
 const AEO=require('./engine.js');
+const Pseudo=require('./pseudocode.js');
 const config={fn:'sphere',n:8,T:12,L:-5,U:5,seed:42};
 const near=(actual,expected,tol=1e-12)=>assert.ok(Math.abs(actual-expected)<=tol*Math.max(1,Math.abs(expected)),actual+' vs '+expected);
 function vec(actual,expected) {
@@ -132,6 +133,54 @@ test('特定食性獨立示範只評估一次；整代沒有某策略時不補�
   assert.ok(Object.values(missing.diets[1]).some(v=>v===0));
   for(const stage of ['herb','carn','omni'])
     assert.equal(missing.diets[1][stage],missing.events.filter(e=>e.kind==='evaluate'&&e.stage===stage).length);
+});
+test('中文虛擬碼逐行對應真實事件，三種食性都驗算接受與拒絕',()=>{
+  const r=AEO.run({...config,fn:'square',n:8,T:12,L:-5,U:5,seed:0});
+  const outcomes={herb:{},carn:{},omni:{}};
+  const omniParts=[];
+  for(const e of r.events){
+    if(e.stage==='omni'&&e.kind==='proposal')omniParts.push(Pseudo.eventLine(e));
+    if(e.kind!=='evaluate'||!outcomes[e.stage])continue;
+    const detail=Pseudo.details(e,Pseudo.eventLine(e),r.config);
+    assert.deepEqual(detail.raw,e.raw);
+    assert.deepEqual(detail.candidate,e.next);
+    assert.equal(detail.oldFValue,e.oldF);
+    assert.equal(detail.newFValue,e.newF);
+    assert.equal(detail.accepted,e.accepted);
+    assert.match(detail.outcome,e.accepted?/接受新解/:/拒絕新解/);
+    assert.ok(detail.equation.includes(e.stage==='herb'?'式 (4)–(6)':e.stage==='carn'?'式 (4)–(5)、(7)':'式 (4)–(5)、(8)'));
+    outcomes[e.stage][e.accepted]=true;
+    if(e.stage==='herb')vec(e.raw,AEO.consumption(e.old,e.delta1,e.random.C));
+    if(e.stage==='carn'){
+      const peer=e.refs.find(x=>x.role==='peer');
+      assert.ok(peer.rank>=2&&peer.rank<e.rank);
+      vec(e.raw,AEO.consumption(e.old,e.delta2,e.random.C));
+    }
+    if(e.stage==='omni'){
+      vec(e.deltaMix,AEO.mix(e.random.r2,e.delta1,e.delta2));
+      vec(e.raw,AEO.consumption(e.old,e.deltaMix,e.random.C));
+    }
+  }
+  for(const stage of ['herb','carn','omni'])assert.deepEqual(outcomes[stage],{false:true,true:true});
+  assert.ok(omniParts.includes(18)&&omniParts.includes(19)&&omniParts.includes(20));
+  const updates=r.events.filter(e=>e.kind==='proposal'&&['production','decomposition'].includes(e.stage));
+  assert.ok(updates.some(e=>Pseudo.eventLine(e)===8));
+  assert.ok(updates.some(e=>Pseudo.eventLine(e)===25));
+  assert.ok(r.events.some(e=>e.stage==='production'&&e.kind==='evaluate'&&Pseudo.eventLine(e)===9));
+  assert.ok(r.events.some(e=>e.stage==='decomposition'&&e.kind==='evaluate'&&Pseudo.eventLine(e)===26));
+  for(const line of [14,17,18,19,20]){
+    const index=Pseudo.findEventIndex(r,line,0);
+    assert.ok(index>=0,`虛擬碼第 ${line} 行找不到真實事件`);
+    assert.equal(Pseudo.eventLine(r.events[index]),line,`第 ${line} 行點選後應回到對應事件`);
+  }
+  const init=Pseudo.details(r.events.find(e=>e.kind==='init'),3,r.config,r);
+  const expectedBest=r.initial.reduce((a,b)=>a.f<b.f?a:b);
+  assert.ok(init.calculation.includes(`個體 ${expectedBest.id}`));
+  const sort=Pseudo.details(r.events.find(e=>e.kind==='sort'),5,r.config,r);
+  assert.deepEqual(sort.calculation.match(/個體 \d+/g),[`個體 ${r.events.find(e=>e.kind==='sort').order[0]}`,`個體 ${r.events.find(e=>e.kind==='sort').order.at(-1)}`]);
+  const finish=Pseudo.details(r.events.at(-1),28,r.config,r);
+  const shownBest=Number(finish.calculation.match(/最佳 f\(x\) = ([^；]+)/)?.[1]);
+  near(shownBest,r.history.at(-1).best,1e-4);
 });
 test('不合法設定逐一拒絕',()=>{
   for(const overrides of [{n:2},{n:41},{n:3.5},{T:0},{T:151},{seed:-1},{seed:2**32},{seed:1.2},{seed:''},{L:5,U:5},{L:6,U:1},{L:NaN},{U:Infinity},{L:-10001},{fn:'toString'},{demo:'fake'}])

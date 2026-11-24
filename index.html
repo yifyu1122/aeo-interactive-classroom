@@ -19,7 +19,7 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=theme-20261122">
+  <link rel="stylesheet" href="style.css?v=pseudocode-20261122">
   <link rel="stylesheet" href="lesson.css">
 </head>
 <body>
@@ -692,21 +692,39 @@ x' = x_best + D × (e × x_best − h × xᵢ)</pre>
           <!-- 虛擬碼同步展示卡片 -->
           <div class="pseudocode-box">
             <div class="head">
-              <span>AEO 演算法虛擬碼 (PSEUDOCODE)</span>
-              <span>同步高亮執行行</span>
+              <span>AEO 演算法步驟追蹤</span>
+              <div class="pseudocode-modes" role="tablist" aria-label="虛擬碼顯示模式">
+                <button type="button" role="tab" id="pseudoSimpleTab" aria-selected="true" aria-controls="pseudoSimple">簡易說明</button>
+                <button type="button" role="tab" id="pseudoFullTab" aria-selected="false" aria-controls="pseudoFull">完整中文虛擬碼</button>
+              </div>
             </div>
-            <ol class="code" id="aeo_pseudocode">
-              <li>Initialize population P within [L, U], evaluate f(x)</li>
-              <li>For iteration t = 1 to T:</li>
-              <li>&nbsp;&nbsp;Sort population from worst to best (x₁ worst, xₙ best)</li>
-              <li>&nbsp;&nbsp;Update producer x₁ using Eq. (1)-(3)</li>
-              <li>&nbsp;&nbsp;For each consumer i = 2 to n: (Herb / Carn / Omni)</li>
-              <li>&nbsp;&nbsp;&nbsp;&nbsp;If f(x'ᵢ) &lt; f(xᵢ) then xᵢ ← x'ᵢ (Greedy selection)</li>
-              <li>&nbsp;&nbsp;Record current best solution x_best</li>
-              <li>&nbsp;&nbsp;For each individual i = 1 to n: Decompose using Eq. (9)-(12)</li>
-              <li>&nbsp;&nbsp;&nbsp;&nbsp;If f(x'ᵢ) &lt; f(xᵢ) then xᵢ ← x'ᵢ</li>
-              <li>End For; Return best solution found</li>
-            </ol>
+            <div id="pseudoSimple" class="pseudocode-view" role="tabpanel" aria-labelledby="pseudoSimpleTab">
+              <ol class="pseudo-simple" id="aeo_pseudocode_simple">
+                <li data-pseudo-phase="init">先在範圍內抽出一群位置，算出各自的目標值。</li>
+                <li data-pseudo-phase="sort">依目標值排序，找出最差個體與目前最佳個體。</li>
+                <li data-pseudo-phase="production">生產者混合最佳位置與隨機位置，提出新位置。</li>
+                <li data-pseudo-phase="consume">消費者抽一種食性策略，依位置差提出新位置。</li>
+                <li data-pseudo-phase="evaluate">檢查是否越界、計算新目標值，只接受更好的候選解。</li>
+                <li data-pseudo-phase="decomposition">分解者以本輪最佳位置為基準提出擾動候選解。</li>
+                <li data-pseudo-phase="finish">記錄歷史最佳；到達迭代上限後回傳結果。</li>
+              </ol>
+              <p class="pseudo-simple-note" id="pseudoSimpleNote">目前先顯示操作步驟；切換「完整中文虛擬碼」可查看每種位置更新公式。</p>
+            </div>
+            <div id="pseudoFull" class="pseudocode-view" role="tabpanel" aria-labelledby="pseudoFullTab" hidden>
+              <ol class="code" id="aeo_pseudocode"></ol>
+              <p class="pseudo-code-hint">點選程式行可跳到最近一次對應的實際事件；高亮行代表播放游標目前執行的事件。</p>
+            </div>
+            <section class="pseudo-detail" id="pseudoDetail" aria-live="polite" aria-label="虛擬碼計算解說">
+              <h4 id="pseudoDetailTitle">目前步驟的白話解說</h4>
+              <p id="pseudoExplain">逐步播放後，這裡會顯示目前事件的解說與計算。</p>
+              <div class="pseudo-detail-grid">
+                <div><strong>數學公式</strong><p id="pseudoEquation">—</p></div>
+                <div><strong>變數意思</strong><p id="pseudoVariables">—</p></div>
+                <div><strong>本次實際亂數與參考對象</strong><p id="pseudoRandomRefs">—</p></div>
+                <div><strong>代入計算</strong><pre id="pseudoCalculation">—</pre></div>
+              </div>
+              <p class="pseudo-outcome" id="pseudoOutcome">尚未產生候選解。</p>
+            </section>
           </div>
 
           <!-- 詳細步驟解說面板 -->
@@ -902,9 +920,10 @@ x' = x_best + D × (e × x_best − h × xᵢ)</pre>
 
   <!-- 載入腳本 -->
   <script src="engine.js"></script>
+  <script src="pseudocode.js"></script>
   <script src="plot.js?v=theme-20261122"></script>
   <script src="lesson.js"></script>
   <script src="units.js?v=theme-20261122"></script>
-  <script src="app.js?v=theme-20261122"></script>
+  <script src="app.js?v=pseudocode-20261122"></script>
 </body>
 </html>

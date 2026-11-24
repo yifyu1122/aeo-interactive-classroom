@@ -30,6 +30,8 @@
     speed: 1,
     showFormulas: true,
     showTrails: true,
+    pseudocodeMode: 'simple',
+    pseudocodeSelection: null,
     reducedMotion: false,
     savedRuns: [],
     followMode: true,
@@ -158,34 +160,104 @@
 
   /* ── 虛擬碼同步高亮 ─────────────────────────────────────── */
   function updatePseudocode(ev) {
-    const lines = document.querySelectorAll('#aeo_pseudocode li');
-    if (!lines.length) return;
-    lines.forEach(l => l.classList.remove('hl'));
+    const map = global.AEOPseudocode;
+    if (!map || !ev) return;
+    const activeLine = map.eventLine(ev);
+    const lines = document.querySelectorAll('#aeo_pseudocode [data-pseudo-line]');
+    lines.forEach(el => {
+      const active = Number(el.dataset.pseudoLine) === activeLine;
+      el.classList.toggle('hl', active);
+      if (active) el.setAttribute('aria-current', 'step'); else el.removeAttribute('aria-current');
+    });
+    const simplePhase = ev.kind === 'evaluate' ? 'evaluate' :
+      ev.kind === 'init' ? 'init' :
+      ev.kind === 'sort' ? 'sort' :
+        ev.kind === 'finish' ? 'finish' :
+          ev.stage === 'production' ? 'production' :
+            ev.stage === 'decomposition' ? 'decomposition' :
+              ['herb','carn','omni'].includes(ev.stage) ? (ev.kind === 'evaluate' ? 'evaluate' : 'consume') : 'finish';
+    document.querySelectorAll('#aeo_pseudocode_simple [data-pseudo-phase]').forEach(el => {
+      const active = el.dataset.pseudoPhase === simplePhase;
+      el.classList.toggle('hl', active);
+      if (active) el.setAttribute('aria-current', 'step'); else el.removeAttribute('aria-current');
+    });
+    if (state.pseudocodeSelection && state.pseudocodeSelection.index !== state.cursor) state.pseudocodeSelection = null;
+    renderPseudocodeDetails(ev, state.pseudocodeSelection?.lineId || activeLine);
+  }
 
-    // Pseudocode line mapping
-    // 1: init
-    // 2: loop start
-    // 3: sort
-    // 4: production
-    // 5: consumption
-    // 6: accept test (consumption/production)
-    // 7: best record
-    // 8: decomposition
-    // 9: accept test (decomposition)
-    // 10: end loop / finish
-    let activeLine = 1;
-    if (ev.kind === 'init') activeLine = 1;
-    else if (ev.kind === 'sort') activeLine = 3;
-    else if (ev.stage === 'production') activeLine = ev.kind === 'evaluate' ? 6 : 4;
-    else if (['herb', 'carn', 'omni'].includes(ev.stage)) activeLine = ev.kind === 'evaluate' ? 6 : 5;
-    else if (ev.stage === 'decomposition') activeLine = ev.kind === 'evaluate' ? 9 : 8;
-    else if (ev.kind === 'finish') activeLine = 10;
-
-    const target = lines[activeLine - 1];
-    if (target) {
-      target.classList.add('hl');
-      target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  function renderPseudocodeDetails(ev, lineId, unavailable = false) {
+    const map = global.AEOPseudocode;
+    if (!map) return;
+    const detail = map.details(ev, lineId, state.params, state.run);
+    if (!detail) return;
+    const title = $('pseudoDetailTitle');
+    if (title) title.textContent = detail.strategy && detail.strategy !== '—'
+      ? `第 ${ev.t} 輪・${detail.strategy}策略・個體 ${ev.id}`
+      : detail.line.phase === 'init' ? '初始族群與歷史最佳' : `虛擬碼第 ${detail.line.id} 行`;
+    if ($('pseudoExplain')) $('pseudoExplain').textContent = detail.explain;
+    if ($('pseudoEquation')) $('pseudoEquation').textContent = detail.equation;
+    if ($('pseudoVariables')) $('pseudoVariables').textContent = detail.variables;
+    if ($('pseudoRandomRefs')) {
+      const items = [...detail.randoms, ...detail.refs];
+      $('pseudoRandomRefs').textContent = items.length ? items.join('；') : '此行沒有位置更新亂數或參考個體。';
     }
+    if ($('pseudoCalculation')) $('pseudoCalculation').textContent = detail.calculation;
+    if ($('pseudoOutcome')) {
+      $('pseudoOutcome').textContent = unavailable
+        ? '這次 Seed 執行沒有產生此策略事件；不會虛構亂數或計算。可重新執行，或將游標移到實際出現的策略。'
+        : detail.outcome;
+      $('pseudoOutcome').classList.toggle('accepted', detail.accepted === true);
+      $('pseudoOutcome').classList.toggle('rejected', detail.accepted === false);
+    }
+  }
+
+  function buildPseudocode() {
+    const map = global.AEOPseudocode;
+    const list = $('aeo_pseudocode');
+    if (!map || !list || list.childElementCount) return;
+    map.lines.forEach(line => {
+      const item = document.createElement('li');
+      item.dataset.pseudoLine = line.id;
+      item.tabIndex = 0;
+      item.setAttribute('role', 'button');
+      item.setAttribute('aria-label', `虛擬碼第 ${line.id} 行：${line.code}`);
+      const code = document.createElement('code');
+      code.textContent = line.code;
+      item.append(code);
+      const inspect = () => {
+        stop();
+        const index = map.findEventIndex(state.run, line.id, state.cursor);
+        state.pseudocodeSelection = {lineId:line.id, index:index >= 0 ? index : null};
+        if (index >= 0) goTo(index);
+        else renderPseudocodeDetails(null, line.id, true);
+      };
+      item.addEventListener('click', inspect);
+      item.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inspect(); }
+      });
+      list.append(item);
+    });
+    const simpleTab = $('pseudoSimpleTab'), fullTab = $('pseudoFullTab');
+    const setMode = mode => {
+      state.pseudocodeMode = mode;
+      const simple = mode === 'simple';
+      if ($('pseudoSimple')) $('pseudoSimple').hidden = !simple;
+      if ($('pseudoFull')) $('pseudoFull').hidden = simple;
+      if (simpleTab) simpleTab.setAttribute('aria-selected', String(simple));
+      if (fullTab) fullTab.setAttribute('aria-selected', String(!simple));
+    };
+    [[simpleTab,'simple'],[fullTab,'full']].forEach(([tab,mode],index,all) => {
+      if (!tab) return;
+      tab.addEventListener('click', () => setMode(mode));
+      tab.addEventListener('keydown', e => {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        e.preventDefault();
+        const next = all[1-index][0];
+        setMode(all[1-index][1]);
+        next?.focus();
+      });
+    });
+    setMode('simple');
   }
 
   function updatePlayButton() {
@@ -448,6 +520,7 @@
 
   /* ── 初始化事件綁定 ─────────────────────────────────────── */
   function init() {
+    buildPseudocode();
     // The first visit is light by design; a saved explicit choice always wins.
     const themeToggle = $('themeToggle');
     if (themeToggle) {
