@@ -149,6 +149,16 @@ test('中文虛擬碼逐行對應真實事件，三種食性都驗算接受與�
     assert.equal(detail.accepted,e.accepted);
     assert.match(detail.outcome,e.accepted?/接受新解/:/拒絕新解/);
     assert.ok(detail.equation.includes(e.stage==='herb'?'式 (4)–(6)':e.stage==='carn'?'式 (4)–(5)、(7)':'式 (4)–(5)、(8)'));
+    assert.equal(detail.strategy,{herb:'草食',carn:'肉食',omni:'雜食'}[e.stage]);
+    assert.ok(detail.randoms.some(value=>value.startsWith('C = ')),e.stage+' 應顯示實際消費係數');
+    assert.ok(detail.refs.length>0,e.stage+' 應顯示實際參考個體');
+    assert.ok(detail.calculation.includes('xᵢ = ['),e.stage+' 應顯示更新前位置');
+    assert.ok(detail.calculation.includes('xᵢ′ = '),e.stage+' 應顯示代入計算後的新位置');
+    if(e.rank>2) assert.ok(detail.randoms.some(value=>value.startsWith('dietDraw = ')),e.stage+' 應顯示本次食性抽選亂數');
+    if(e.stage==='carn'||e.stage==='omni'){
+      assert.ok(detail.randoms.some(value=>value.startsWith('peerDraw = ')),e.stage+' 應顯示同伴抽選亂數');
+      assert.ok(detail.refs.some(value=>value.includes('排序同伴')),e.stage+' 應顯示排序同伴參考對象');
+    }
     outcomes[e.stage][e.accepted]=true;
     if(e.stage==='herb')vec(e.raw,AEO.consumption(e.old,e.delta1,e.random.C));
     if(e.stage==='carn'){
@@ -173,6 +183,15 @@ test('中文虛擬碼逐行對應真實事件，三種食性都驗算接受與�
     assert.ok(index>=0,`虛擬碼第 ${line} 行找不到真實事件`);
     assert.equal(Pseudo.eventLine(r.events[index]),line,`第 ${line} 行點選後應回到對應事件`);
   }
+  for(const line of Pseudo.lines){
+    assert.ok(Pseudo.findEventIndex(r,line.id,0)>=0,'虛擬碼第 '+line.id+' 行找不到可檢視的實際事件');
+  }
+  assert.match(Pseudo.lines.find(line=>line.id===8).code,/\(1 - a\) \* x_n \+ a \* x_rand.*生產（式 1）/);
+  assert.match(Pseudo.lines.find(line=>line.id===14).code,/x_i \+ C \* \(x_i - x1\).*草食更新（式 6）/);
+  assert.match(Pseudo.lines.find(line=>line.id===17).code,/x_i \+ C \* \(x_i - x_j\).*肉食更新（式 7）/);
+  assert.match(Pseudo.lines.find(line=>line.id===19).code,/r2 \* delta1 \+ \(1 - r2\) \* delta2/);
+  assert.match(Pseudo.lines.find(line=>line.id===23).code,/D = 3 \* u.*分解係數（式 9）/);
+  assert.match(Pseudo.lines.find(line=>line.id===25).code,/x_best \+ D \* \(e \* x_best - h \* x_i\).*分解（式 12）/);
   const init=Pseudo.details(r.events.find(e=>e.kind==='init'),3,r.config,r);
   const expectedBest=r.initial.reduce((a,b)=>a.f<b.f?a:b);
   assert.ok(init.calculation.includes(`個體 ${expectedBest.id}`));
