@@ -49,8 +49,9 @@
     const exhibit=document.querySelector('.engineering-exhibit');
     const referenceDetails=document.createElement('details');referenceDetails.className='engineering-photo-details';referenceDetails.innerHTML='<summary>查看實物參考與圖片授權</summary>';referenceDetails.appendChild(reference);exhibit.after(referenceDetails);
     model.classList.add('panel');model.insertAdjacentHTML('afterbegin','<div class="panel-head"><h3>可操作的尺寸模型</h3></div>');exhibit.appendChild(controls);
-    function render(){document.getElementById('engineeringModelDrawing').innerHTML=geometry(i,saved[i]);document.getElementById('engineeringFeedback').textContent=feedback(i,saved[i]);definitions[i].forEach((d,j)=>{document.getElementById('engineeringValue'+j).textContent=num(saved[i][j]);});}
+    function render(){document.getElementById('engineeringModelDrawing').innerHTML=geometry(i,saved[i]);document.getElementById('engineeringFeedback').textContent=feedback(i,saved[i]);definitions[i].forEach((d,j)=>{document.getElementById('engineeringValue'+j).textContent=num(saved[i][j]);});if(i===0){['trussX1','trussX2'].forEach((id,j)=>{document.getElementById(id).value=saved[i][j];});document.getElementById('trussX1').dispatchEvent(new Event('input'));}}
     definitions[i].forEach((d,j)=>document.getElementById('engineeringParam'+j).addEventListener('input',e=>{saved[i][j]=Number(e.target.value);render();}));
+    if(i===0)['trussX1','trussX2'].forEach((id,j)=>document.getElementById(id).addEventListener('change',e=>{const x=Number(e.target.value),d=definitions[i][j];if(e.target.value.trim() && Number.isFinite(x) && x>=d[2] && x<=d[3]){saved[i][j]=x;document.getElementById('engineeringParam'+j).value=x;render();}}));
     document.getElementById('engineeringReset').addEventListener('click',()=>{saved[i]=definitions[i].map(d=>d[5]);definitions[i].forEach((d,j)=>document.getElementById('engineeringParam'+j).value=saved[i][j]);render();});render();
   }
   global.EngineeringControls={mount,geometry,feedback,definitions};
