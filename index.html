@@ -101,7 +101,12 @@
         <button data-target="unit5" aria-selected="false">
           <span class="n">05</span>
           <b>演算法實驗室</b>
-          <small>八種工程設計與完整執行</small>
+          <small>虛擬碼對照與完整執行</small>
+        </button>
+        <button data-target="unit6" aria-selected="false">
+          <span class="n">06</span>
+          <b>工程設計案例</b>
+          <small>八種實物與最佳化模型</small>
         </button>
       </nav>
     </div>
@@ -611,8 +616,6 @@ x' = x_best + D × (e × x_best − h × xᵢ)</pre>
          單元 5：完整演算法實驗室 (Full Algorithm Lab & Pseudocode)
          ========================================================= -->
     <section id="unit5" hidden>
-      <section id="engineeringCases" class="engineering-cases" aria-label="論文工程案例"></section>
-      <hr class="engineering-divider">
       <div class="banner">
         <p class="kicker">UNIT 05 / FULL AEO EXPERIMENT & PSEUDOCODE</p>
         <h1>AEO 演算法實驗室：全流程逐步追蹤與虛擬碼對照</h1>
@@ -868,7 +871,13 @@ return X_best</code></pre>
           </li>
         </ol>
       </div>
-      </section>
+      <div class="unit-actions"><button class="btn-primary" data-jump="unit6">下一步：單元 6「工程設計案例」</button></div>
+    </section>
+
+    <section id="unit6" hidden aria-label="單元六：工程設計案例">
+      <section id="engineeringCases" class="engineering-cases" aria-label="論文工程案例"></section>
+      <div class="unit-actions"><button class="btn-outlined" data-jump="unit5">回到單元 5「演算法實驗室」</button></div>
+    </section>
 
   </main>
 
@@ -948,6 +957,7 @@ return X_best</code></pre>
       <li><strong>單元 3 比較三種食性：</strong>草食者參考生產者、肉食者參考同伴、雜食者混合兩者。特別注意消費係數 <code>C</code> 為負時朝參考點前進，為正時反方向探索。</li>
       <li><strong>單元 4 觀察分解擾動：</strong>圍繞當前最佳解擾動，並觀察「貪婪法則」如何篩選新解，只接受變得更好的提案。</li>
       <li><strong>單元 5 完整演算法實驗：</strong>按「下一步」逐步執行，對照右側高亮的虛擬碼，觀察多個候選點在 1D 或 2D 搜尋空間的收斂過程！</li>
+      <li><strong>單元 6 工程設計案例：</strong>對照八種工程案例的實物與結構圖，辨認尺寸變數，再看目標與限制。三桿桁架提供指定設計的計算器。</li>
     </ol>
     <div style="text-align:right; margin-top:16px;">
       <button class="btn-primary" data-close="guide">開始探索！</button>
