@@ -1129,3 +1129,27 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
   #unit6 .engineering-case-nav { flex-wrap: nowrap; overflow-x: auto; margin: 12px 0; padding-bottom: 6px; }
   #unit6 .engineering-case-nav button { flex: 0 0 auto; }
 }
+
+/* 單元六：案例導覽與左圖右控工作區。 */
+#unit6 .engineering-cases { margin-top: 8px; }
+#unit6 .engineering-case-nav { margin: 16px 0 24px; padding: 8px; gap: 6px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-muted); }
+#unit6 .engineering-case-nav button { flex: 1 1 auto; min-height: 44px; padding: 9px 12px; border-color: transparent; background: transparent; font-size: .9rem; font-weight: 650; }
+#unit6 .engineering-case-nav button[aria-pressed="true"] { background: var(--primary); color: var(--primary-fg); box-shadow: none; }
+#unit6 .engineering-select { display: none; }
+#unit6 #engineeringDetail > h3 { margin: 4px 0; font-size: clamp(1.35rem,2.3vw,1.8rem); }
+#unit6 .engineering-case-lead { color: var(--muted-fg); line-height: 1.6; }
+#unit6 .engineering-exhibit { gap: 16px; align-items: stretch; }
+#unit6 .engineering-model, #unit6 .engineering-controls { min-width: 0; }
+#unit6 .engineering-model { display: flex; flex-direction: column; }
+#unit6 #engineeringModelDrawing { flex: 1; display: grid; place-items: center; background: var(--stage-bg); border-radius: 8px; }
+#unit6 .engineering-controls .ctrl-group { margin: 4px 0 20px; }
+#unit6 .engineering-result { margin: 0; }
+#unit6 .engineering-result h4 { margin-bottom: 6px; }
+#unit6 .engineering-caveat { margin: 12px 0 0; font-size: .84rem; line-height: 1.5; }
+#unit6 .engineering-photo-details, #unit6 .engineering-more { margin: 14px 0; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); }
+#unit6 .engineering-photo-details summary, #unit6 .engineering-more summary { min-height: 28px; }
+@media(max-width:768px) {
+  #unit6 .engineering-case-nav { display: none; }
+  #unit6 .engineering-select { display: grid; max-width: none; margin: 14px 0 22px; }
+  #unit6 .engineering-exhibit { grid-template-columns: 1fr; }
+}
