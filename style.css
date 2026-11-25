@@ -1035,3 +1035,16 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* 工程案例閱讀器沿用主題語意色，長公式可在窄畫面換行。 */
+.engineering-cases { margin: 32px 0; padding: clamp(16px,3vw,32px); border: 1px solid var(--border); border-radius: 16px; background: var(--card); color: var(--card-fg); line-height: 1.8; }
+.engineering-cases h2, .engineering-cases h3 { margin-bottom: 12px; }
+.engineering-cases p { margin: 12px 0; }
+.engineering-cases dt { font-weight: 700; margin-top: 16px; }
+.engineering-cases dd { margin: 4px 0 12px; overflow-wrap: anywhere; }
+.engineering-cases select { width: 100%; }
+.engineering-note, .engineering-formula { background: var(--surface-muted); color: var(--surface-muted-fg); padding: 12px; border-radius: 8px; }
+.engineering-flow { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin: 20px 0; }
+.engineering-flow span { padding: 12px; border: 1px solid var(--border); border-radius: 8px; color: var(--primary); font-weight: 700; text-align: center; }
+.engineering-cases fieldset { padding: 16px; border: 1px solid var(--border); border-radius: 8px; }
+@media(max-width:600px) { .engineering-flow { grid-template-columns: repeat(2,minmax(0,1fr)); } }

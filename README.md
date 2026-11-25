@@ -70,3 +70,9 @@ node tests.cjs
 ## 參考文獻
 
 [1] W. Zhao, L. Wang, and Z. Zhang, “Artificial ecosystem-based optimization: a novel nature-inspired meta-heuristic algorithm,” *Neural Computing and Applications*, vol. 32, no. 13, pp. 9383–9425, Jul. 2020. [https://doi.org/10.1007/s00521-019-04452-x](https://doi.org/10.1007/s00521-019-04452-x)
+
+## 論文工程案例
+
+第五單元下方新增 §4.1–4.8 八項案例閱讀器，包含題意、變數、目標、限制概念、AEO 建模方式及圖表來源。三桿桁架附單點應力與目標評估器。此功能未將八題接入原 AEO 播放引擎，也未重跑論文結果。
+
+軸承案例依附錄採最大化動態承載力，並揭露 §4.7 正文 minimized 與附錄 Maximize 的差異。複雜工程限制仍應以原文附錄核對，不能將摘要當作完整求解模型。
