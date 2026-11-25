@@ -19,7 +19,7 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=pseudocode-20261122">
+  <link rel="stylesheet" href="style.css?v=pseudocode-source-20261125">
   <link rel="stylesheet" href="lesson.css">
 </head>
 <body>
@@ -696,6 +696,7 @@ x' = x_best + D × (e × x_best − h × xᵢ)</pre>
               <div class="pseudocode-modes" role="tablist" aria-label="虛擬碼顯示模式">
                 <button type="button" role="tab" id="pseudoSimpleTab" aria-selected="true" aria-controls="pseudoSimple">簡易說明</button>
                 <button type="button" role="tab" id="pseudoFullTab" aria-selected="false" aria-controls="pseudoFull">完整中文虛擬碼</button>
+                <button type="button" role="tab" id="pseudoSourceTab" aria-selected="false" aria-controls="pseudoSource">原論文偽碼中譯</button>
               </div>
             </div>
             <div id="pseudoSimple" class="pseudocode-view" role="tabpanel" aria-labelledby="pseudoSimpleTab">
@@ -708,11 +709,47 @@ x' = x_best + D × (e × x_best − h × xᵢ)</pre>
                 <li data-pseudo-phase="decomposition">分解者以本輪最佳位置為基準提出擾動候選解。</li>
                 <li data-pseudo-phase="finish">記錄歷史最佳；到達迭代上限後回傳結果。</li>
               </ol>
-              <p class="pseudo-simple-note" id="pseudoSimpleNote">目前先顯示操作步驟；切換「完整中文虛擬碼」可查看每種位置更新公式。</p>
+              <p class="pseudo-simple-note" id="pseudoSimpleNote">切換「完整中文虛擬碼」查看引擎逐步計算；「原論文偽碼中譯」則保留論文流程原貌與式號。</p>
             </div>
             <div id="pseudoFull" class="pseudocode-view" role="tabpanel" aria-labelledby="pseudoFullTab" hidden>
               <ol class="code" id="aeo_pseudocode"></ol>
               <p class="pseudo-code-hint">點選程式行可跳到最近一次對應的實際事件；高亮行代表播放游標目前執行的事件。</p>
+            </div>
+            <div id="pseudoSource" class="pseudocode-view" role="tabpanel" aria-labelledby="pseudoSourceTab" hidden>
+              <div class="pseudo-source-note">
+                <strong>原論文流程的逐句中譯</strong>
+                <p>條件「1/3 rand 2/3」依 rand ∈ [0, 1] 解讀為「1/3 ≤ rand &lt; 2/3」。以下保留原偽碼的式號與食性分支。原文正文的式 (7)、式 (8) 食性標籤和這段偽碼不同；互動計算與逐步高亮仍以「完整中文虛擬碼」及實際引擎為準。</p>
+              </div>
+              <pre class="official-pseudocode" lang="zh-Hant"><code>隨機初始化生態系統 X_i（候選解集合）
+計算每個候選解的適應值 Fit_i
+X_best = 目前找到的最佳解
+
+while 尚未滿足停止條件:
+    # 生產階段
+    更新個體 X_1 的位置，使用式 (1)
+
+    # 消費階段
+    for i in range(2, n + 1):
+        rand = 均勻亂數(0, 1)
+
+        if rand &lt; 1 / 3:
+            # 草食者：使用式 (6)
+            更新個體 X_i 的位置
+        elif 1 / 3 &lt;= rand &lt; 2 / 3:
+            # 雜食者：依原偽碼使用式 (7)
+            更新個體 X_i 的位置
+        else:
+            # 肉食者：依原偽碼使用式 (8)
+            更新個體 X_i 的位置
+    計算每個個體的適應值
+    更新目前找到的最佳解 X_best
+
+    # 分解階段
+    使用式 (9) 更新每個個體的位置
+    計算每個個體的適應值
+    更新目前找到的最佳解 X_best
+return X_best</code></pre>
+              <p class="pseudo-code-hint">原偽碼未展開各式的計算細節、邊界處理與新舊解接受規則；請切回「完整中文虛擬碼」查看網站引擎實際執行的逐步計算。來源：<a href="https://doi.org/10.1007/s00521-019-04452-x" target="_blank" rel="noreferrer">Zhao、Wang 與 Zhang（2020）原論文</a>。</p>
             </div>
             <section class="pseudo-detail" id="pseudoDetail" aria-live="polite" aria-label="虛擬碼計算解說">
               <h4 id="pseudoDetailTitle">目前步驟的白話解說</h4>
@@ -924,6 +961,6 @@ x' = x_best + D × (e × x_best − h × xᵢ)</pre>
   <script src="plot.js?v=theme-20261122"></script>
   <script src="lesson.js"></script>
   <script src="units.js?v=theme-20261122"></script>
-  <script src="app.js?v=pseudocode-20261122"></script>
+  <script src="app.js?v=pseudocode-source-20261125"></script>
 </body>
 </html>

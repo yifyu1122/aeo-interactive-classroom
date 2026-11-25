@@ -677,6 +677,11 @@ ol.code li.hl {
 }
 ol.code li:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
 .pseudo-code-hint, .pseudo-simple-note { margin:0; padding:0 14px 12px; color:var(--muted-fg); font-size:.82rem; line-height:1.55; }
+.pseudo-source-note { margin:12px 14px 0; padding:11px 12px; border-left:3px solid var(--warning); border-radius:5px; background:var(--surface-muted); color:var(--fg); font-size:.84rem; line-height:1.6; }
+.pseudo-source-note strong { display:block; margin-bottom:3px; color:var(--fg); }
+.pseudo-source-note p { margin:0; }
+.official-pseudocode { margin:10px 14px; padding:14px; overflow:auto; border:1px solid var(--border); border-radius:7px; background:var(--card); color:var(--fg); font: .82rem/1.65 var(--mono); white-space:pre; }
+.official-pseudocode code { font:inherit; color:inherit; }
 .pseudo-simple { margin:0; padding:10px 14px 10px 42px; font-size:.92rem; line-height:1.55; }
 .pseudo-simple li { padding:5px 8px; margin:2px 0; color:var(--muted-fg); border-radius:5px; }
 .pseudo-simple li.hl { color:var(--code-hl-fg); background:var(--code-hl); box-shadow:0 0 0 2px var(--code-hl-border); font-weight:700; }

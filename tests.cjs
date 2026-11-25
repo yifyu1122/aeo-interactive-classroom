@@ -2,6 +2,7 @@
 // Run from any directory: node /path/to/tests.cjs
 const assert=require('node:assert/strict');
 const test=require('node:test');
+const fs=require('node:fs');
 const AEO=require('./engine.js');
 const Pseudo=require('./pseudocode.js');
 const config={fn:'sphere',n:8,T:12,L:-5,U:5,seed:42};
@@ -200,6 +201,15 @@ test('中文虛擬碼逐行對應真實事件，三種食性都驗算接受與�
   const finish=Pseudo.details(r.events.at(-1),28,r.config,r);
   const shownBest=Number(finish.calculation.match(/最佳 f\(x\) = ([^；]+)/)?.[1]);
   near(shownBest,r.history.at(-1).best,1e-4);
+});
+test('原論文偽碼中譯獨立呈現，預設簡易模式且保留原偽碼食性式號',()=>{
+  const html=fs.readFileSync('index.html','utf8');
+  const app=fs.readFileSync('app.js','utf8');
+  assert.match(html,/id="pseudoSimpleTab" aria-selected="true"/);
+  assert.match(html,/id="pseudoSourceTab"[^>]*>原論文偽碼中譯/);
+  assert.match(html,/id="pseudoSource"[\s\S]*?rand &lt; 1 \/ 3:[\s\S]*?式 \(6\)[\s\S]*?1 \/ 3 &lt;= rand &lt; 2 \/ 3:[\s\S]*?式 \(7\)[\s\S]*?式 \(8\)/);
+  assert.match(html,/互動計算與逐步高亮仍以「完整中文虛擬碼」及實際引擎為準/);
+  assert.match(app,/mode === 'source'/);
 });
 test('不合法設定逐一拒絕',()=>{
   for(const overrides of [{n:2},{n:41},{n:3.5},{T:0},{T:151},{seed:-1},{seed:2**32},{seed:1.2},{seed:''},{L:5,U:5},{L:6,U:1},{L:NaN},{U:Infinity},{L:-10001},{fn:'toString'},{demo:'fake'}])

@@ -237,24 +237,31 @@
       });
       list.append(item);
     });
-    const simpleTab = $('pseudoSimpleTab'), fullTab = $('pseudoFullTab');
+    const tabs = [
+      {tab:$('pseudoSimpleTab'), mode:'simple', panel:$('pseudoSimple')},
+      {tab:$('pseudoFullTab'), mode:'full', panel:$('pseudoFull')},
+      {tab:$('pseudoSourceTab'), mode:'source', panel:$('pseudoSource')}
+    ];
     const setMode = mode => {
       state.pseudocodeMode = mode;
-      const simple = mode === 'simple';
-      if ($('pseudoSimple')) $('pseudoSimple').hidden = !simple;
-      if ($('pseudoFull')) $('pseudoFull').hidden = simple;
-      if (simpleTab) simpleTab.setAttribute('aria-selected', String(simple));
-      if (fullTab) fullTab.setAttribute('aria-selected', String(!simple));
+      tabs.forEach(item => {
+        if (item.panel) item.panel.hidden = item.mode !== mode;
+        if (item.tab) item.tab.setAttribute('aria-selected', String(item.mode === mode));
+      });
+      const detail = $('pseudoDetail');
+      if (detail) detail.hidden = mode === 'source';
     };
-    [[simpleTab,'simple'],[fullTab,'full']].forEach(([tab,mode],index,all) => {
+    tabs.forEach((item,index) => {
+      const {tab,mode} = item;
       if (!tab) return;
       tab.addEventListener('click', () => setMode(mode));
       tab.addEventListener('keydown', e => {
         if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
         e.preventDefault();
-        const next = all[1-index][0];
-        setMode(all[1-index][1]);
-        next?.focus();
+        const nextIndex = (index + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
+        const next = tabs[nextIndex];
+        setMode(next.mode);
+        next.tab?.focus();
       });
     });
     setMode('simple');
