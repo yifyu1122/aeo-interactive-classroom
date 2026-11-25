@@ -1162,6 +1162,9 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
 .benchmark-card p, .benchmark-card small { color:var(--muted-fg); line-height:1.6; }
 .benchmark-note { margin:22px 0; padding:18px 22px; border:1px solid var(--border); border-radius:12px; background:var(--card); line-height:1.8; }
 .benchmark-note summary { cursor:pointer; font-weight:700; color:var(--primary); }
+.benchmark-lab { margin:28px 0; padding:20px 24px; border:1px solid var(--border); border-radius:14px; background:var(--card); }
+.benchmark-lab > summary { cursor:pointer; font-size:1.15rem; font-weight:750; color:var(--primary); }
+.benchmark-lab[open] > summary { margin-bottom:8px; }
 @media(max-width:768px) { .benchmark-toolbar,.benchmark-grid { grid-template-columns:1fr; } .benchmark-card dl { grid-template-columns:1fr; } }
 @media(max-width:768px) {
   #unit6 .engineering-case-nav { display: none; }

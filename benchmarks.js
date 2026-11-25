@@ -27,6 +27,15 @@
     ['23','低維','Shekel 10','−Σᵢ₌₁¹⁰[||x−aᵢ||²+cᵢ]⁻¹','[0,10]⁴','−10.5364','中心 aᵢ 與常數 cᵢ 依論文表格'],
     ...Array.from({length:8},(_,i)=>[String(i+24),'複合',`Composition function ${i+1}`,'CEC 2014 composition：Σᵢ wᵢ(x)[λᵢgᵢ(Mᵢ(x−oᵢ))+bᵢ]+fᵢ*','[-100,100]',''+(2300+i*100),`30 維；N=${[5,3,3,5,5,5,3,3][i]} 個分量；位移、旋轉與權重依 CEC 定義`])
   ];
+  const source=document.getElementById('unit7');
+  const unitNav=document.querySelector('[data-target="unit7"]');
+  if(source){
+    const unit5=document.getElementById('unit5');
+    const details=document.createElement('details');details.className='benchmark-lab';
+    details.innerHTML='<summary>31 個基準函數｜公式與搜尋特性</summary><p class="sub">在實驗室操作時查閱函數分類、公式、搜尋範圍與基準最佳值。</p>';
+    [...source.querySelectorAll('.benchmark-toolbar,#benchmarkGrid,.benchmark-note')].forEach(node=>details.appendChild(node));
+    unit5.appendChild(details);source.remove();unitNav?.remove();
+  }
   const group=document.getElementById('benchmarkGroup'),search=document.getElementById('benchmarkSearch'),grid=document.getElementById('benchmarkGrid');
   function render(){const q=search.value.trim().toLowerCase();const rows=entries.filter(x=>(group.value==='all'||({uni:'單峰',multi:'多峰',low:'低維',comp:'複合'}[group.value]===x[1]))&&(!q||x.join(' ').toLowerCase().includes(q)||`f${x[0]}`.includes(q)));grid.innerHTML=rows.map(x=>`<article class="panel benchmark-card"><header><span>f${x[0]}</span><small>${x[1]}</small></header><h3>${x[2]}</h3><code>${x[3]}</code><dl><dt>維度／範圍</dt><dd>${x[1]==='低維'?x[4]:common30.replace('逐維範圍見本列',`範圍 ${x[4]}`)}</dd><dt>已知最佳值</dt><dd>${x[5]}</dd></dl><p>${x[6]}</p>${x[1]==='複合'?'<small>個別分量與矩陣參數由 CEC 2014 資料檔決定；此處列通用組合形式，不偽稱是完整展開式。</small>':''}</article>`).join('')||'<p class="empty-state">沒有符合條件的函數。</p>';}
   group.addEventListener('change',render);search.addEventListener('input',render);render();
