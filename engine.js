@@ -12,6 +12,11 @@
     sphere: {name:'二維 Sphere', dim:2, L:-5, U:5, multimodal:false},
     rastrigin: {name:'二維 Rastrigin', dim:2, L:-5.12, U:5.12, multimodal:true}
   };
+  // 擴充目標函數的共用註冊表；Benchmark 目錄只能透過此介面接入引擎。
+  function registerFunction(id, meta, evaluator) {
+    if (!id || !meta || !Number.isInteger(meta.dim) || meta.dim < 1 || typeof evaluator !== 'function') throw new TypeError('函數註冊資料不完整。');
+    functions[id] = {...meta, evaluate:evaluator};
+  }
   const defaults = {fn:'square', n:8, T:12, seed:42, L:-5, U:5, demo:''};
   const has = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
   function validate(input = {}) {
@@ -30,7 +35,9 @@
     if (!has(functions,fn) || !Array.isArray(x) || x.length!==functions[fn].dim || !x.every(Number.isFinite))
       throw new RangeError('目標函數和位置維度不相符，或座標不是有限數值。');
     // 10(1−cos(2πx)) = 20 sin²(πx); stable evaluation near the origin.
-    return x.reduce((sum,v)=>sum+v*v+(functions[fn].multimodal ? 20*Math.sin(Math.PI*v)**2 : 0),0);
+    const spec=functions[fn];
+    if (spec.evaluate) return spec.evaluate(x);
+    return x.reduce((sum,v)=>sum+v*v+(spec.multimodal ? 20*Math.sin(Math.PI*v)**2 : 0),0);
   }
   function generator(seed) {
     // Mulberry32 with explicitly bounded 32-bit state, followed by Box–Muller.
@@ -199,5 +206,5 @@
     }
     return pop;
   }
-  return {functions,defaults,validate,run,stateAt,objective,production,consumption,decomposition,factor,diff,mix,bound};
+  return {functions,registerFunction,defaults,validate,run,stateAt,objective,production,consumption,decomposition,factor,diff,mix,bound};
 });

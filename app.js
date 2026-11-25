@@ -59,7 +59,7 @@
     stop();
     state.selected = null;
     try {
-      state.run = global.AEO.run(state.params);
+      const started=performance.now(); state.run = global.AEO.run(state.params); state.run.elapsedMs=performance.now()-started;
     } catch (e) {
       toast('執行失敗：' + e.message);
       return;
@@ -443,6 +443,9 @@
         compareList.textContent = '尚未保存比較組。點選「保存本次設定作比較」可加入圖中對照。';
       }
     }
+    const rows=$('compareRows');
+    if(rows) rows.innerHTML=state.savedRuns.map(item=>{const best=item.run.history.at(-1)?.best??NaN, known=item.knownBest??0;return `<tr><td>${item.fnName}</td><td>${item.config.n}/${item.config.T}/${item.config.seed}</td><td>${number(best)}</td><td>${number(known)}</td><td>${number(Math.abs(best-known))}</td><td>${item.run.history.at(-1)?.fe??'—'}</td><td>${number(item.elapsedMs)}</td></tr>`;}).join('');
+    const chart=$('compareChart'); if(chart&&global.AEOPlot) global.AEOPlot.convergence(chart,[{run:state.run,label:'目前執行'},...state.savedRuns]);
   }
 
   function exportCSV() {
@@ -685,7 +688,7 @@
       saveRunBtn.addEventListener('click', () => {
         if (!state.run) return;
         const label = `${global.AEO.functions[state.params.fn]?.name || state.params.fn} n=${state.params.n} T=${state.params.T} s=${state.params.seed}`;
-        state.savedRuns.push({ run: state.run, label });
+        state.savedRuns.push({ run: state.run, label, config:{...state.params}, fnName:global.AEO.functions[state.params.fn]?.name||state.params.fn, knownBest:global.AEO.functions[state.params.fn]?.knownBest??0, elapsedMs:state.run.elapsedMs??0 });
         updateLab();
         toast(`已保存。共 ${state.savedRuns.length} 組比較曲線。`);
       });
@@ -705,6 +708,9 @@
 
     const csvBtn = $('csv');
     if (csvBtn) csvBtn.addEventListener('click', exportCSV);
+    const saveCompare=$('saveCurrentCompare'); if(saveCompare) saveCompare.addEventListener('click',()=>{if(!state.run)return;state.savedRuns.push({run:state.run,label:`${global.AEO.functions[state.params.fn]?.name} n=${state.params.n} T=${state.params.T} seed=${state.params.seed}`,config:{...state.params},fnName:global.AEO.functions[state.params.fn]?.name||state.params.fn,knownBest:global.AEO.functions[state.params.fn]?.knownBest??0,elapsedMs:state.run.elapsedMs??0});updateLab();toast('目前結果已加入比較。');});
+    const runCompare=$('runCompare'); if(runCompare) runCompare.addEventListener('click',()=>{try{const fn=$('compareFn').value, config={...state.params,fn,n:Number($('compareN').value),T:Number($('compareT').value),seed:Number($('compareSeed').value),L:global.AEO.functions[fn].L,U:global.AEO.functions[fn].U,demo:''};global.AEO.validate(config);const t0=performance.now(),run=global.AEO.run(config),elapsedMs=performance.now()-t0;state.savedRuns.push({run,label:`${global.AEO.functions[fn].name} n=${config.n} T=${config.T} seed=${config.seed}`,config,fnName:global.AEO.functions[fn].name,knownBest:global.AEO.functions[fn].knownBest??0,elapsedMs});updateLab();$('compareStatus').textContent=`完成 ${state.savedRuns.length} 組。跨函數請比較相對誤差，不要直接比較原始目標值。`;toast('比較實驗完成。');}catch(e){$('compareStatus').textContent='參數錯誤：'+e.message;}});
+    const clearCompare=$('clearCompare'); if(clearCompare) clearCompare.addEventListener('click',()=>{state.savedRuns=[];updateLab();$('compareStatus').textContent='比較結果已清除。';});
 
     // Keyboard shortcuts
     document.addEventListener('keydown', e => {
@@ -721,6 +727,11 @@
   // Export
   global.AEOApp = {
     init,
+    loadFunction(id) {
+      const meta=global.AEO.functions[id]; if(!meta) return toast('此函數尚未註冊，暫不支援執行。');
+      stop(); state.params.fn=id; state.params.L=meta.L; state.params.U=meta.U; state.currentDim=meta.dim;
+      state.run=null; execute(); updateAll(); toast(`${meta.name} 已載入；Seed 與族群設定保留。`);
+    },
     onShow() {
       if (state.run) updateAll();
     }

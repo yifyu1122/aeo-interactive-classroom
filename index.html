@@ -108,7 +108,6 @@
           <b>工程設計案例</b>
           <small>八種實物與最佳化模型</small>
         </button>
-        <button data-target="unit7" aria-selected="false"><span class="n">07</span><b>31 個測試函數</b><small>公式與搜尋特性</small></button>
       </nav>
     </div>
   </header>
@@ -625,6 +624,7 @@ x' = x_best + D × (e × x_best − h × xᵢ)</pre>
           右側的 AEO 虛擬碼會同步高亮正在執行的步驟，讓你清楚掌握每一顆候選點的決策過程。
         </p>
       </div>
+<div class="lab-tabs" role="tablist" aria-label="實驗室分頁"><button class="lab-tab active" role="tab" aria-selected="true" data-lab-tab="basics">基礎教學</button><button class="lab-tab" role="tab" aria-selected="false" data-lab-tab="benchmarks">31 個基準函數</button><button class="lab-tab" role="tab" aria-selected="false" data-lab-tab="compare">實驗比較</button></div><div class="lab-panel" data-lab-panel="basics">
 
       <!-- 主工作區：左邊視覺圖，右邊虛擬碼與步驟解說 -->
       <div class="grid">
@@ -875,6 +875,11 @@ return X_best</code></pre>
       <div class="unit-actions"><button class="btn-primary" data-jump="unit6">下一步：單元 6「工程設計案例」</button></div>
     </section>
 
+
+</div><section class='lab-panel' data-lab-panel='benchmarks' hidden><h2>31 個基準函數</h2><div class="panel benchmark-toolbar"><label class="field">函數分類<select id="benchmarkGroup"><option value="all">全部 31 個</option><option value="uni">單峰：f₁–f₇</option><option value="multi">多峰：f₈–f₁₃</option><option value="low">低維：f₁₄–f₂₃</option><option value="comp">複合：f₂₄–f₃₁</option></select></label><label class="field">快速搜尋<input id="benchmarkSearch" type="search" placeholder="輸入編號或名稱，例如 f9、Rastrigin"></label></div>
+      <div id="benchmarkGrid" class="benchmark-grid" aria-live="polite"></div>
+      <details class="benchmark-note"><summary>複合函數公式如何閱讀？</summary><p>f₂₄–f₃₁ 不是單一基本函數的簡單和，而是把多個基本／混合函數分量，經平移、縮放、旋轉後依距離權重混合。論文 §3 說明這 8 題採 CEC 2014 特別場次定義；各題分量數 N 為 3 或 5，最佳值依序為 2300–3000。完整分量、位移向量與旋轉矩陣須依 CEC 2014 官方定義檔，不應自行補造。網站以通用組合公式說明結構，並連到 CEC 2014 定義來源。</p><p>一般形式：f(x)=Σᵢ wᵢ(x)[λᵢ gᵢ(Mᵢ(x−oᵢ))+bᵢ]+Fᵢ*；wᵢ 由 x 與位移 oᵢ 的距離決定，再正規化使 Σwᵢ=1。每個分量的 gᵢ、λᵢ、Mᵢ、oᵢ、bᵢ 均由對應 CEC 定義指定。</p><a href="https://github.com/P-N-S/CEC2014" target="_blank" rel="noopener">CEC 2014 定義來源</a></details>
+</section><section class='lab-panel' data-lab-panel='compare' hidden><h2>實驗比較</h2><p>以相同函數比較 n、T、Seed，或切換函數比較相對誤差；不同函數不直接用目標值大小排名。</p><div class="compare-controls"><label class="field">測試函數<select id="compareFn"><option value="square">平方函數（最佳值 0）</option><option value="multi">一維 Rastrigin（最佳值 0）</option><option value="sphere">二維 Sphere（最佳值 0）</option><option value="rastrigin">二維 Rastrigin（最佳值 0）</option><option value="bench1">f1 Sphere 30D（最佳值 0）</option><option value="bench9">f9 Rastrigin 30D（最佳值 0）</option></select></label><label class="field">族群 n<input id="compareN" type="number" min="3" max="40" value="8"></label><label class="field">迭代 T<input id="compareT" type="number" min="1" max="150" value="12"></label><label class="field">隨機種子<input id="compareSeed" type="number" min="0" value="42"></label><button class="btn-primary" id="runCompare">執行並加入比較</button><button class="btn-outlined" id="saveCurrentCompare">加入目前結果</button><button class="btn-outlined" id="clearCompare">清除比較</button></div><p id="compareStatus" aria-live="polite">尚無比較結果。</p><div id="compareChart" class="compare-chart"></div><div class="table-wrap"><table><thead><tr><th>函數</th><th>設定 n/T/Seed</th><th>最佳值</th><th>已知最佳</th><th>誤差</th><th>FE</th><th>耗時 (ms)</th></tr></thead><tbody id="compareRows"></tbody></table></div></section>
     <section id="unit6" hidden aria-label="單元六：工程設計案例">
       <h1 class="engineering-title">工程設計案例</h1>
       <section id="engineeringCases" class="engineering-cases" aria-label="論文工程案例"></section>
@@ -882,13 +887,7 @@ return X_best</code></pre>
       <div class="unit-actions"><button class="btn-outlined" data-jump="unit5">回到單元 5「演算法實驗室」</button></div>
     </section>
 
-    <section id="unit7" hidden aria-label="單元七：31 個測試函數">
-      <div class="banner"><p class="kicker">UNIT 07 / BENCHMARK FUNCTIONS</p><h1>31 個測試函數：看懂搜尋地形</h1><p class="intro">論文用 31 個基準函數測試 AEO 的搜尋能力。選擇函數，查看公式、範圍、最佳值與它要測試的能力。</p></div>
-      <div class="panel benchmark-toolbar"><label class="field">函數分類<select id="benchmarkGroup"><option value="all">全部 31 個</option><option value="uni">單峰：f₁–f₇</option><option value="multi">多峰：f₈–f₁₃</option><option value="low">低維：f₁₄–f₂₃</option><option value="comp">複合：f₂₄–f₃₁</option></select></label><label class="field">快速搜尋<input id="benchmarkSearch" type="search" placeholder="輸入編號或名稱，例如 f9、Rastrigin"></label></div>
-      <div id="benchmarkGrid" class="benchmark-grid" aria-live="polite"></div>
-      <details class="benchmark-note"><summary>複合函數公式如何閱讀？</summary><p>f₂₄–f₃₁ 不是單一基本函數的簡單和，而是把多個基本／混合函數分量，經平移、縮放、旋轉後依距離權重混合。論文 §3 說明這 8 題採 CEC 2014 特別場次定義；各題分量數 N 為 3 或 5，最佳值依序為 2300–3000。完整分量、位移向量與旋轉矩陣須依 CEC 2014 官方定義檔，不應自行補造。網站以通用組合公式說明結構，並連到 CEC 2014 定義來源。</p><p>一般形式：f(x)=Σᵢ wᵢ(x)[λᵢ gᵢ(Mᵢ(x−oᵢ))+bᵢ]+Fᵢ*；wᵢ 由 x 與位移 oᵢ 的距離決定，再正規化使 Σwᵢ=1。每個分量的 gᵢ、λᵢ、Mᵢ、oᵢ、bᵢ 均由對應 CEC 定義指定。</p><a href="https://github.com/P-N-S/CEC2014" target="_blank" rel="noopener">CEC 2014 定義來源</a></details>
-      <div class="unit-actions"><button class="btn-outlined" data-jump="unit6">回到單元 6「工程設計案例」</button></div>
-    </section>
+
 
   </main>
 
@@ -983,13 +982,16 @@ return X_best</code></pre>
   <script src="engineering-visuals.js?v=20261125"></script>
   <script src="engineering-controls.js?v=layout-20261125"></script>
   <script src="engineering.js?v=constraints-20261125"></script>
-  <script src="benchmarks.js?v=unit5-lab-20261126"></script>
   <script src="engine.js"></script>
   <script src="pseudocode.js"></script>
   <script src="plot.js?v=theme-20261122"></script>
   <script src="lesson.js"></script>
   <script src="units.js?v=theme-20261122"></script>
   <script src="app.js?v=pseudocode-source-20261125"></script>
+  <script src="benchmarks.js?v=integrated-tabs-20261126"></script>
 </body>
 </html>
+
+
+
 

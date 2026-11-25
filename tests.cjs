@@ -35,6 +35,19 @@ test('四種目標函數，已知最小值與維度',()=>{
   for (const [fn,meta] of Object.entries(AEO.functions)) near(AEO.objective(fn,Array(meta.dim).fill(0)),0);
   assert.throws(()=>AEO.objective('sphere',[1]));assert.throws(()=>AEO.objective('x',[1]));
 });
+test('基準函數註冊、維度切換與已知最佳值',()=>{
+  const fspec=require('./engine.js');
+  fspec.registerFunction('testSphere',{name:'測試 Sphere',dim:3,L:-100,U:100},x=>x.reduce((s,v)=>s+v*v,0));
+  assert.equal(fspec.objective('testSphere',[0,0,0]),0);
+  assert.equal(fspec.validate({fn:'testSphere'}).fn,'testSphere');
+  assert.equal(fspec.run({fn:'testSphere',n:3,T:1,seed:42,L:-100,U:100}).history.length,2);
+  assert.throws(()=>fspec.objective('testSphere',[0,0]),RangeError);
+});
+test('Benchmark 分頁已整合且原第七單元不再獨立',()=>{
+  const html=fs.readFileSync('index.html','utf8');
+  assert.match(html,/data-lab-tab="basics"/);assert.match(html,/data-lab-tab="benchmarks"/);assert.match(html,/data-lab-tab="compare"/);
+  assert.doesNotMatch(html,/data-target="unit7"|id="unit7"/);
+});
 test('同 Seed 全部事件相同，換 Seed 不同，種子 0 有效',()=>{
   assert.deepEqual(AEO.run(config),AEO.run(config));
   assert.notDeepEqual(AEO.run({...config,seed:0}).initial,AEO.run(config).initial);
