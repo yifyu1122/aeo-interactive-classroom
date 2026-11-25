@@ -1048,3 +1048,57 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
 .engineering-flow span { padding: 12px; border: 1px solid var(--border); border-radius: 8px; color: var(--primary); font-weight: 700; text-align: center; }
 .engineering-cases fieldset { padding: 16px; border: 1px solid var(--border); border-radius: 8px; }
 @media(max-width:600px) { .engineering-flow { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+
+/* 單元五：實物參考與論文模型並讀。 */
+.engineering-cases { padding: 0; border: 0; background: transparent; margin-top: 20px; }
+.engineering-cases h2 { font-size: clamp(1.8rem,3.1vw,2.65rem); line-height: 1.3; max-width: 24ch; }
+.engineering-intro { max-width: 65ch; font-size: 1.08rem; color: var(--muted-fg); }
+.engineering-case-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 16px; }
+.engineering-case-nav button { background: var(--card); color: var(--fg); border: 1px solid var(--input-border); border-radius: 6px; padding: 11px 16px; font: inherit; cursor: pointer; }
+.engineering-case-nav button:hover { background: var(--secondary-hover); }
+.engineering-case-nav button[aria-pressed="true"] { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); box-shadow: inset 0 -3px 0 currentColor; }
+.engineering-select { max-width: 400px; }
+#engineeringDetail { padding-top: 18px; }
+#engineeringDetail h3 { font-size: 1.8rem; }
+.engineering-case-lead { font-size: 1.1rem; max-width: 65ch; }
+.engineering-exhibit { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; align-items: start; }
+.engineering-exhibit figure { min-width: 0; margin: 0; }
+.reference-photo, #engineeringModelDrawing { height: 340px; display: grid; place-items: center; border: 1px solid var(--border); background: var(--card); border-radius: 10px; overflow: hidden; }
+.reference-photo { background: #fff; }
+.reference-photo img { width: 100%; height: 100%; object-fit: contain; }
+.engineering-exhibit figcaption { margin-top: 10px; font-size: .9rem; line-height: 1.7; color: var(--muted-fg); }
+.image-credit { font-size: .8rem; }
+.image-credit p { overflow-wrap: anywhere; }
+#engineeringModelDrawing svg { width: 100%; height: 100%; max-height: 340px; }
+#engineeringModelDrawing .part { fill: var(--surface-muted); stroke: var(--fg); stroke-width: 2; }
+#engineeringModelDrawing .hole { fill: var(--card); stroke: var(--fg); stroke-width: 2; }
+#engineeringModelDrawing .metal { stroke: var(--fg); }
+#engineeringModelDrawing .accent { stroke: var(--primary); }
+#engineeringModelDrawing .support { fill: var(--muted-fg); stroke: var(--muted-fg); }
+#engineeringModelDrawing .dimension { stroke: var(--accent-purple); stroke-dasharray: 5 4; }
+#engineeringModelDrawing .load { stroke: var(--accent-warm); }
+#engineeringModelDrawing .model-label { fill: var(--fg); font: 16px 'Microsoft JhengHei',sans-serif; }
+#engineeringModelDrawing .coil { fill: none; stroke: var(--primary); }
+#engineeringModelDrawing .weld, #engineeringModelDrawing .friction { fill: var(--primary); stroke: var(--fg); stroke-width: 2; }
+#engineeringModelDrawing .pitch { fill: none; stroke: var(--accent-purple); stroke-width: 2; stroke-dasharray: 5 4; }
+.engineering-observe { padding: 20px 0; border-block: 1px solid var(--border); }
+.engineering-observe h4 { font-size: 1.1rem; }
+.engineering-observe p { max-width: 70ch; }
+.engineering-cases dl { display: grid; grid-template-columns: 150px minmax(0,1fr); gap: 16px 24px; margin-block: 28px; }
+.engineering-cases dt, .engineering-cases dd { margin: 0; }
+.engineering-cases dd { max-width: 75ch; }
+.engineering-divider { margin: 56px 0; border: 0; border-top: 1px solid var(--border); }
+@media(max-width:768px) { .engineering-exhibit { grid-template-columns: 1fr; gap: 18px; } .engineering-cases dl { grid-template-columns: 1fr; gap: 6px; } .engineering-cases dt { margin-top: 16px; } .reference-photo, #engineeringModelDrawing { height: 290px; } .engineering-case-nav button { flex: 1 1 130px; } }
+
+/* 窄螢幕保留單元導覽，但不讓固定頁首遮住教材。 */
+@media(max-width:640px) {
+  nav.steps { display: flex; overflow-x: auto; gap: 6px; padding-block: 6px; }
+  nav.steps button { flex: 0 0 145px; min-width: 0; padding: 8px 10px; }
+  nav.steps button .n { font-size: 1rem; margin: 0; }
+  nav.steps button b { font-size: .85rem; }
+  nav.steps button small { display: none; }
+  header.site-header { position: static; }
+}
+
+.engineering-cases h2 { max-width: none; text-wrap: balance; }
+

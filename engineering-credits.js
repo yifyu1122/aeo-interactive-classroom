@@ -1,0 +1,83 @@
+/* Wikimedia Commons 圖像署名；資料由各檔案授權頁取得。 */
+window.ENGINEERING_CREDITS = [
+  {
+    "id": "truss",
+    "src": "assets/engineering/truss.jpg",
+    "title": "RRTrussBridgeSideView.jpg",
+    "author": "Image by en:User:Leonard G.",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:RRTrussBridgeSideView.jpg",
+    "description": "A Southern Pacific Railroad bridge, now part of the Iron Horse Regional Trail in Contra Costa County, California. \nThis crosses a channelized Walnut Creek at the Concord-Pleasant Hill boundary immediately south of Monument Boulevard, altered by blurring the background for clarity and image compression. This is a single track railroad bridge now used for pipeline support and to carry a 'rail trail' pedestrian and bicycle path.\nThe two outer vertical elements are in tension. The central vertical element carries no significant load but stabilizes the upper horizontal chord, which is under compression. The outer vertical elements are in tension and support the deck. The outer diagonal elements are also in compression while the inner diagonals are in tension. Often, Lower chord horizontal elements are in tension, shear, and bending however in this case, the roadbed is supported on a beam structure that runs under the rail tracks, which is in turn supported by the truss at three crossbeams secured at the node points and the abutments. Thus the truss lower chords are in pure tension. Some trusses do not use vertical elements, using greater resistance to bending in the horizontal elements to compensate. One form of truss uses a large number of diagonal elements to form a lattice-like structure. A truss like this may be designed with the roadbed and footings on the top chord and the other elements below. In that case the vertical element purposes are changed from deck support to chord support and their loadings thus change."
+  },
+  {
+    "id": "cantilever",
+    "src": "assets/engineering/cantilever.jpg",
+    "title": "MIT 4.401 Introduction to Building Technology, Spring 2006 - Cantilevering Beams - 3047547975.jpg",
+    "author": "mitopencourseware",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:MIT_4.401_Introduction_to_Building_Technology,_Spring_2006_-_Cantilevering_Beams_-_3047547975.jpg",
+    "description": "Simple sketch of cantilevering steel beams.\nFormat\n\nDiagram\nCredit\n\nImage courtesy of MIT OpenCourseWare.\nMIT OpenCourseWare Course of Origin\n\n4.401 Introduction to Building Technology Spring 2006\nMIT Course Instructor\n\nAndersen, Marilyne\nMIT Department\n\nArchitecture\nLicense\n\nhttp://ocw.mit.edu/terms\nPublisher\n\nMIT OpenCourseWare"
+  },
+  {
+    "id": "spring",
+    "src": "assets/engineering/spring.jpg",
+    "title": "CompressionSpring.jpg",
+    "author": "Taktoa",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:CompressionSpring.jpg",
+    "description": "A small compression spring"
+  },
+  {
+    "id": "vessel",
+    "src": "assets/engineering/vessel.jpg",
+    "title": "Hydrogen pressure cylinder.jpg",
+    "author": "Acheolg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Hydrogen_pressure_cylinder.jpg",
+    "description": "hydrogen pressure cylinder"
+  },
+  {
+    "id": "weld",
+    "src": "assets/engineering/weld.jpg",
+    "title": "Schweißen2.jpg",
+    "author": "Dako99",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Schwei%C3%9Fen2.jpg",
+    "description": "Schweißnaht"
+  },
+  {
+    "id": "gear",
+    "src": "assets/engineering/gear.jpg",
+    "title": "Multiple reducer gears.JPG",
+    "author": "Johnscotaus",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Multiple_reducer_gears.JPG",
+    "description": "reducer gears in a microwave oven.  For driving the microwave turntable"
+  },
+  {
+    "id": "bearing",
+    "src": "assets/engineering/bearing.jpg",
+    "title": "Ball Bearing2.jpg",
+    "author": "Solaris2006",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Ball_Bearing2.jpg",
+    "description": "Ball Bearing"
+  },
+  {
+    "id": "clutch",
+    "src": "assets/engineering/clutch.png",
+    "title": "Basket clutch.png",
+    "author": "Genetics4good",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Basket_clutch.png",
+    "description": "A snapshot of a 3D model of a basket clutch. Uploaded to wikipedia with permission granted by the AT CAD Team."
+  }
+];
