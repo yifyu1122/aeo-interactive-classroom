@@ -24,7 +24,9 @@ test('桁架指定數值、可行與不可行狀態；懸臂梁撓度限制',()=
   assert.match(controls.feedback(1,[10,10,10,10,10]),/✓/);
 });
 test('不把局部計算冒稱完整可行性或質量結果',()=>{
-  assert.match(controls.feedback(2,[.05,.3,10]),/尚未評估四項限制/);
+  assert.match(controls.feedback(2,[.05,.05,10]),/分母為零/);
+  assert.match(controls.feedback(2,[.051897,.361751,10.879842]),/g1=0.0109/);
+  assert.match(controls.feedback(3,[.84,.42,43,160]),/四項限制通過|限制未通過/);
   assert.match(controls.feedback(7,[70,100,1.5,800,5]),/未指定密度/);
   assert.match(controls.feedback(6,[125,31.5,50]),/重疊/);
 });

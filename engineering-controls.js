@@ -34,8 +34,8 @@
   function feedback(i,v){
     if(i===0){const [a,b]=v,den=Math.SQRT2*a*a+2*a*b,g=[2*(Math.SQRT2*a+b)/den-2,2*b/den-2,2/(a+Math.SQRT2*b)-2];return `f = (2√2×${num(a)}+${num(b)})×10 = ${num((2*Math.SQRT2*a+b)*10)}；${g.map((x,j)=>'g'+(j+1)+'='+num(x)).join('；')}。${g.every(x=>x<=0)?'✓ 三項應力限制通過':'✕ 有應力限制超標'}`;}
     if(i===1){const f=.0624*v.reduce((a,b)=>a+b,0),g=v.reduce((s,x,j)=>s+[61,37,19,7,1][j]/x**3,0)-1;return `f = 0.0624Σxᵢ = ${num(f)}；g₁ = Σaᵢ/xᵢ³−1 = ${num(g)}。${g<=0?'✓ 撓度限制通過':'✕ 撓度限制超標'}`;}
-    if(i===2)return `目標 f = (N+2)Dd² = ${num((v[2]+2)*v[1]*v[0]**2)}。圖中圈數以四捨五入顯示；目標仍使用滑桿的連續 N。尚未評估四項限制。`;
-    if(i===3){const [s,h,r,l]=v;return `成本 f = ${num(.6224*s*r*l+1.7781*h*r*r+3.1661*s*s*l+19.84*s*s*r)}。容量 = ${num(Math.PI*r*r*l+4/3*Math.PI*r**3)}。尚未評估完整可行性。`;}
+    if(i===2){const [d,D,N]=v,den=12566*(D*d**3-d**4);if(Math.abs(den)<1e-12)return '無法評估：彈簧限制式分母為零。請調整線徑或圈徑。';const g=[1-N*D**3/(71785*d**4),(4*D**2-d*D)/den+1/(5108*d*d)-1,1-140.45*d/(D*D*N),(d+D)/1.5-1];return `目標 f = ${num((N+2)*D*d*d)}；${g.map((x,j)=>`g${j+1}=${num(x)}`).join('；')}。${g.every(x=>x<=0)?'✓ 四項限制通過':'✕ 至少一項限制未通過'}。圖中圈數四捨五入，計算使用連續 N。`;}
+    if(i===3){const [s,h,r,l]=v,vol=Math.PI*r*r*l+4/3*Math.PI*r**3,g=[-s+.0193*r,-h+.00954*r,1296000-vol,l-240];return `成本 f = ${num(.6224*s*r*l+1.7781*h*r*r+3.1661*s*s*l+19.84*s*s*r)}；${g.map((x,j)=>`g${j+1}=${num(x)}`).join('；')}。${g.every(x=>x<=0)?'✓ 四項限制通過':'✕ 至少一項限制未通過'}。`;}
     if(i===4){const [h,l,t,b]=v;return `成本 f = ${num(1.10471*h*h*l+.04811*t*b*(14+l))}。尚未評估應力、撓度與其他限制。`;}
     if(i===5)return '尺寸與齒數改變示意圖。齒形及嚙合為教學近似；尚未計算重量與十一項限制。z 在本尺寸探索器採整數。';
     if(i===6){let overlap=2*v[0]/2*Math.sin(Math.PI/v[2])<v[1];return `${overlap?'✕ 依節圓幾何，鄰球可能重疊。':'✓ 鄰球中心弦距不小於球徑。'}這項幾何檢查不等於完整可行性；其餘七個模型參數、承載力與十項限制尚未計算。`;}
