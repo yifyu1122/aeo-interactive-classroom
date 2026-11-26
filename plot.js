@@ -38,6 +38,7 @@
     if (x !== 0 && (Math.abs(x) < .001 || Math.abs(x) >= 100000)) return x.toExponential(2);
     return Number(x.toPrecision(4)).toString();
   };
+  const normalizedGap = (best, knownBest, initialGap) => initialGap > 0 ? Math.abs(best - knownBest) / initialGap : 0;
   const vector = x => Array.isArray(x) ? x.map(number).join(', ') : '—';
   const clamp = (x, min, max) => Math.min(max, Math.max(min, x));
 
@@ -127,7 +128,7 @@
     return count >= 2 ? Array.from({ length: count }, (_, i) => +(step * (first + i)).toPrecision(12)) : [lo, hi];
   }
 
-  function axes(svg, b, xScale, yScale, L, U, yMin, yMax, is2, compact, theme) {
+  function axes(svg, b, xScale, yScale, L, U, yMin, yMax, is2, compact, theme, dimension) {
     const xs = axisTicks(L, U, compact ? 4 : 7), ys = axisTicks(yMin, yMax, 5);
     for (const y of ys) {
       const py = yScale(y);
@@ -147,8 +148,8 @@
         'stroke-width': 1.2
       });
     }
-    text(svg, b.x, b.y - 15, is2 ? 'y 座標' : '目標值 f(x)', { 'font-size': 11, 'font-weight': '700', fill: theme.ink });
-    text(svg, b.x + b.w, b.y + b.h + 34, is2 ? 'x 座標' : '位置 x', { 'text-anchor': 'end', 'font-size': 11, 'font-weight': '700', fill: theme.ink });
+    text(svg, b.x, b.y - 15, is2 ? 'x₂ 座標' : dimension > 1 ? '目標值 f(x₁, 0, …, 0)' : '目標值 f(x)', { 'font-size': 11, 'font-weight': '700', fill: theme.ink });
+    text(svg, b.x + b.w, b.y + b.h + 34, is2 ? 'x₁ 座標' : dimension > 1 ? '位置 x₁' : '位置 x', { 'text-anchor': 'end', 'font-size': 11, 'font-weight': '700', fill: theme.ink });
   }
 
   function blendHeat(t) {
@@ -157,13 +158,16 @@
     return palette[n].map((a, k) => Math.round(a + (palette[n + 1][k] - a) * f));
   }
 
-  function heat(config) {
-    const { fn, L, U } = config, key = [fn, L, U].join('/');
+  function heat(config, dimension) {
+    const { fn, L, U } = config, key = [fn, L, U, dimension].join('/');
     if (heatCache.has(key)) return heatCache.get(key);
     const size = 180, vals = new Float64Array(size * size);
     let low = Infinity, high = -Infinity;
     for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) {
-      const f = root.AEO.objective(fn, [L + (U - L) * i / (size - 1), U - (U - L) * j / (size - 1)]);
+      const point = Array(root.AEO.functions[fn]?.dim || 2).fill(0);
+      point[0] = L + (U - L) * i / (size - 1);
+      point[1] = U - (U - L) * j / (size - 1);
+      const f = root.AEO.objective(fn, point);
       vals[j * size + i] = f; low = Math.min(low, f); high = Math.max(high, f);
     }
     const canvas = document.createElement('canvas'); canvas.width = canvas.height = size;
@@ -253,17 +257,27 @@
     if (!host || !run || !run.events?.length) return;
     const theme = getTheme();
     const ev = run.events[index], cfg = run.config, { fn, L, U } = cfg;
-    const pop = root.AEO.stateAt(run, index), is2 = fn === 'sphere' || fn === 'rastrigin', key = 'aeop' + (++sequence);
+    const pop = root.AEO.stateAt(run, index), dimension = root.AEO.functions[fn]?.dim || 1;
+    const is2 = dimension > 1 && options.currentDim === 2, key = 'aeop' + (++sequence);
     const width = clamp(host.clientWidth || 740, 320, 1050), compact = width < 530;
     const height = is2 ? clamp(width * 0.58, 287, 395) : clamp(width * 0.45, 255, 342);
     const b = { x: compact ? 46 : 55, y: 37, w: width - (compact ? 66 : 82), h: height - 83 };
-    const svg = makeSVG(host, width, height, is2 ? '二維搜尋空間，顏色為函數值，點選個體可查看紀錄' : '一維函數曲線，橫軸為位置，縱軸為目標值，點選個體可查看紀錄');
+    const sliceText = dimension > 2 ? `；第 3 至 ${dimension} 維固定為 0` : '';
+    const description = is2
+      ? `二維切片搜尋空間，座標為 x₁、x₂${sliceText}，點選個體可查看紀錄`
+      : dimension > 1
+        ? `一維函數切片，x₁變動，其餘 ${dimension - 1} 維固定為 0；個體的高度仍為完整目標值`
+        : '一維函數曲線，橫軸為位置，縱軸為目標值，點選個體可查看紀錄';
+    const svg = makeSVG(host, width, height, description);
     svg.dataset.domain = JSON.stringify([L, U]);
     setup(svg, key, b, theme);
 
     const xScale = scale(L, U, b.x, b.x + b.w);
     const sampled = tickValues(L, U, Math.max(240, Math.ceil(b.w)));
-    const curve = is2 ? [] : sampled.map(x => [x, root.AEO.objective(fn, [x])]);
+    const curve = is2 ? [] : sampled.map(x => {
+      const point = Array(dimension).fill(0); point[0] = x;
+      return [x, root.AEO.objective(fn, point)];
+    });
     let lower = is2 ? L : Math.min(...curve.map(p => p[1]), ...pop.map(p => p.f));
     let upper = is2 ? U : Math.max(...curve.map(p => p[1]), ...pop.map(p => p.f));
     if (!is2) {
@@ -278,7 +292,7 @@
     const clipped = el(svg, 'g', { 'clip-path': `url(#${key}clip)` });
     let heatmap;
     if (is2) {
-      heatmap = heat(cfg);
+      heatmap = heat(cfg, dimension);
       el(clipped, 'image', { href: heatmap.url, x: b.x, y: b.y, width: b.w, height: b.h, preserveAspectRatio: 'none' });
     } else {
       const dots = curve.map(([x, f]) => [xScale(x), yScale(f)]);
@@ -286,7 +300,7 @@
       el(clipped, 'path', { d: d + ` L ${b.x + b.w} ${b.y + b.h} L ${b.x} ${b.y + b.h} Z`, fill: `url(#${key}area)` });
     }
 
-    axes(svg, b, xScale, yScale, L, U, lower, upper, is2, compact, theme);
+    axes(svg, b, xScale, yScale, L, U, lower, upper, is2, compact, theme, dimension);
 
     const layer = el(svg, 'g', { 'clip-path': `url(#${key}clip)` });
     if (!is2) {
@@ -408,6 +422,7 @@
     if (options.trails && index > 0) items.push(['已接受軌跡', theme.muted, 'arrow']);
     if (refs.length && ['herb', 'carn', 'omni'].includes(ev.stage)) items.push(['虛線：參考點至舊位置', theme.muted, 'arrow']);
     if (is2) items.push(['低 ' + number(heatmap.low), theme.teal], ['高 ' + number(heatmap.high), theme.gold]);
+    if (dimension > 1) items.push([is2 ? `切片：其餘 ${dimension - 2} 維固定為 0` : `切片：其餘 ${dimension - 1} 維固定為 0；點為完整候選解`, theme.muted, 'arrow']);
 
     const caption = legend(host, items);
     if (outNote) {
@@ -423,43 +438,43 @@
   function convergence(host, entries) {
     if (!host) return;
     const theme = getTheme();
-    const runs = (entries || []).filter(Boolean).map((r, i) => ({ run: r.run || r, label: r.label || '執行 ' + (i + 1) }));
+    const runs = (entries || []).filter(Boolean).map((r, i) => {
+      const run = r.run || r, knownBest = r.knownBest ?? 0, initialGap = Math.abs((run.history[0]?.best ?? knownBest) - knownBest);
+      return {run,label:r.label||'執行 '+(i+1),knownBest,initialGap,
+        points:run.history.map(p=>({...p,gapRatio:normalizedGap(p.best,knownBest,initialGap)}))};
+    });
     if (!runs.length) { host.replaceChildren(); return; }
     const w = clamp(host.clientWidth || 600, 265, 960), h = 190, b = { x: 58, y: 26, w: w - 82, h: h - 68 };
-    const svg = makeSVG(host, w, h, '歷代最佳目標值，點選資料點可讀取迭代、評估次數與數值');
-    const all = runs.flatMap(r => r.run.history);
-    let lo = Infinity, hi = -Infinity, maxT = 1;
-    for (const row of all) { lo = Math.min(lo, row.best); hi = Math.max(hi, row.best); maxT = Math.max(maxT, row.t); }
-    const logarithmic = lo > 0 && hi / lo > 100;
-    if (hi === lo) hi = lo + Math.max(1, Math.abs(lo) * 0.05);
+    const svg = makeSVG(host, w, h, '相對初始最佳值差距與函數評估次數；每條曲線起點依該次實驗的初始差距正規化為 100%');
+    const maxGap = Math.max(1, ...runs.flatMap(r=>r.points.map(p=>p.gapRatio))), maxFE = Math.max(1, ...runs.flatMap(r=>r.points.map(p=>p.fe)));
+    const y = scale(0, maxGap, b.y + b.h, b.y), x = scale(0, maxFE, b.x, b.x + b.w);
 
-    const y = logarithmic ? v => scale(Math.log10(lo), Math.log10(hi), b.y + b.h, b.y)(Math.log10(v)) : scale(lo, hi, b.y + b.h, b.y);
-    const x = scale(0, maxT, b.x, b.x + b.w);
-
-    text(svg, b.x, 14, logarithmic ? '歷代最佳目標值（對數刻度）' : '歷代最佳目標值', { fill: theme.ink, 'font-weight': '700' });
+    text(svg, b.x, 14, '相對初始最佳值差距（各組起點 = 100%）', { fill: theme.ink, 'font-weight': '700' });
 
     for (let i = 0; i <= 3; i++) {
-      const f = i / 3, yy = b.y + b.h * (1 - f), val = logarithmic ? Math.exp(Math.log(lo) + (Math.log(hi) - Math.log(lo)) * f) : lo + (hi - lo) * f;
+      const f = i / 3, yy = b.y + b.h * (1 - f), val = maxGap * f;
       line(svg, b.x, yy, b.x + b.w, yy, { stroke: theme.grid, 'stroke-dasharray': '3 4' });
-      text(svg, b.x - 7, yy + 3, number(val), { 'text-anchor': 'end', fill: theme.muted, 'font-size': 10, 'font-weight': '600' });
+      text(svg, b.x - 7, yy + 3, number(val * 100) + '%', { 'text-anchor': 'end', fill: theme.muted, 'font-size': 10, 'font-weight': '600' });
     }
 
-    for (const t of new Set(tickValues(0, maxT, 4).map(Math.round))) {
-      text(svg, x(t), b.y + b.h + 16, String(t), { 'text-anchor': 'middle', fill: theme.muted, 'font-size': 10, 'font-weight': '600' });
+    for (const fe of new Set(tickValues(0, maxFE, 4).map(Math.round))) {
+      text(svg, x(fe), b.y + b.h + 16, String(fe), { 'text-anchor': 'middle', fill: theme.muted, 'font-size': 10, 'font-weight': '600' });
     }
-    text(svg, b.x + b.w, b.y + b.h + 30, '迭代 t', { 'text-anchor': 'end', fill: theme.ink, 'font-weight': '700' });
+    text(svg, b.x + b.w, b.y + b.h + 30, '函數評估次數 FE', { 'text-anchor': 'end', fill: theme.ink, 'font-weight': '700' });
 
     const palette = [theme.teal, theme.coral, theme.peer, theme.gold, theme.randomColor];
-    runs.forEach(({ run }, i) => {
+    runs.forEach(({ run, points, knownBest, initialGap }, i) => {
       const c = palette[i % palette.length];
-      el(svg, 'path', { d: pathText(run.history.map(p => [x(p.t), y(p.best)])), stroke: c, 'stroke-width': 2.4, fill: 'none' });
-      for (const p of run.history) {
-        const dot = el(svg, 'circle', { cx: x(p.t), cy: y(p.best), r: run.history.length > 55 ? 2.0 : 3.2, fill: c });
-        el(dot, 'title', {}, `第 ${p.t} 輪／${p.fe} 次評估／最佳 ${number(p.best)}`);
+      el(svg, 'path', { d: pathText(points.map(p => [x(p.fe), y(p.gapRatio)])), stroke: c, 'stroke-width': 2.4, fill: 'none' });
+      for (const p of points) {
+        const dot = el(svg, 'circle', { cx: x(p.fe), cy: y(p.gapRatio), r: points.length > 55 ? 2.0 : 3.2, fill: c });
+        const gap=initialGap>0?Math.abs(p.best-knownBest):0;
+        el(dot, 'title', {}, `第 ${p.t} 輪／${p.fe} FE／最佳 ${number(p.best)}／與已知最佳差距 ${number(gap)}／初始差距比例 ${number(p.gapRatio*100)}%`);
       }
     });
     legend(host, runs.map((r, i) => [r.label, palette[i % palette.length], 'arrow']));
   }
 
-  root.AEOPlot = { draw, convergence, scale };
+  root.AEOPlot = { draw, convergence, scale, normalizedGap };
+  if (typeof module !== 'undefined' && module.exports) module.exports = root.AEOPlot;
 })(typeof globalThis === 'undefined' ? window : globalThis);

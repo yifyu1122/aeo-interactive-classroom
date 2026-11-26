@@ -5,6 +5,8 @@ const test=require('node:test');
 const fs=require('node:fs');
 const AEO=require('./engine.js');
 const Pseudo=require('./pseudocode.js');
+const Bench=require('./benchmark-functions.js');
+const Plot=require('./plot.js');
 const config={fn:'sphere',n:8,T:12,L:-5,U:5,seed:42};
 const near=(actual,expected,tol=1e-12)=>assert.ok(Math.abs(actual-expected)<=tol*Math.max(1,Math.abs(expected)),actual+' vs '+expected);
 function vec(actual,expected) {
@@ -43,10 +45,94 @@ test('基準函數註冊、維度切換與已知最佳值',()=>{
   assert.equal(fspec.run({fn:'testSphere',n:3,T:1,seed:42,L:-100,U:100}).history.length,2);
   assert.throws(()=>fspec.objective('testSphere',[0,0]),RangeError);
 });
-test('Benchmark 分頁已整合且原第七單元不再獨立',()=>{
+test('可執行基準函數以原論文維度使用共用引擎、Seed 可重現且歷史快照不變',()=>{
+  for(const id of ['1','9']){
+    const spec=Bench.specs[id];
+    AEO.registerFunction(`bench${id}`,{name:`f${id} ${spec.name}`,dim:spec.dim,L:spec.L,U:spec.U,knownBest:spec.best},spec.evaluate);
+  }
+  for(const [fn,L,U] of [['bench1',-100,100],['bench9',-5.12,5.12]]){
+    assert.equal(AEO.functions[fn].dim,30);
+    assert.equal(AEO.objective(fn,Array(30).fill(0)),0);
+    const cfg={fn,n:6,T:4,seed:17,L,U};
+    const first=AEO.run(cfg), replay=AEO.run(cfg);
+    assert.deepEqual(first,replay,fn+' 同 Seed 必須重現完整事件');
+    assert.equal(first.history.at(-1).fe,6*(1+2*4));
+    assert.ok(first.initial.every(p=>p.x.length===30));
+    const saved=structuredClone(first);
+    AEO.run({...cfg,seed:18});
+    assert.deepEqual(first,saved,'已保存歷史不可被後續執行改寫');
+  }
+  near(AEO.objective('bench9',[...Array(29).fill(0),0.5]),410.0625);
+  near(AEO.objective('bench9',[1,...Array(29).fill(0)]),1);
+  assert.ok(AEO.objective('bench9',Array(30).fill(1))>0);
+  assert.equal(Bench.specs[9].evaluate([...Array(29).fill(0),0.5]),410.0625);
+  assert.ok(!Bench.specs[7],'隨機噪聲函數須等到 RNG/FE 策略被明確實作才可執行');
+  const source=fs.readFileSync('benchmarks.js','utf8');
+  assert.match(source,/xᵢ²−10cos\(2πxᵢ\)\+10\]²/);
+  assert.match(source,/尚未驗證／缺少必要資料；目前僅供公式教學，不能執行/);
+});
+test('已接入公式在論文已知最優位置驗證',()=>{
+  for(const [id,spec] of Object.entries(Bench.specs)){
+    const x=Array(spec.dim).fill(0);
+    if(id==='5')x.fill(1);
+    if(id==='6')x.fill(-.5);
+    if(id==='8')x.fill(420.968746);
+    if(id==='11')x.fill(100);
+    if(id==='12')x.fill(-1);
+    if(id==='13')x.fill(1);
+    if(id==='14')x.splice(0,2,-31.97833,-31.97833);
+    if(id==='15')x.splice(0,4,.1928,.1908,.1231,.1358);
+    if(id==='16')x.splice(0,2,.089842,-.712656);
+    if(id==='19')x.splice(0,3,.114614,.555649,.852547);
+    if(id==='20')x.splice(0,6,.20169,.150011,.476874,.275332,.311652,.6573);
+    if(['21','22','23'].includes(id))x.fill(4);
+    near(spec.evaluate(x),spec.best,id==='8'?2e-5:id==='14'?1e-5:id==='15'?1e-5:id==='16'?1e-6:id==='19'?0.003:id==='20'?0.001:id==='21'?2e-5:id==='22'?2e-5:id==='23'?2e-4:1e-8);
+    const idString=String(id);
+    AEO.registerFunction(`verified${idString}`,{name:spec.name,dim:spec.dim,L:spec.L,U:spec.U,knownBest:spec.best},spec.evaluate);
+    near(AEO.objective(`verified${idString}`,x),spec.best,id==='8'?2e-5:id==='14'?1e-5:id==='15'?1e-5:id==='16'?1e-6:id==='19'?0.003:id==='20'?0.001:id==='21'?2e-5:id==='22'?2e-5:id==='23'?2e-4:1e-8);
+  }
+  const penalized2=[6,...Array(29).fill(0)];
+  near(Bench.specs[13].evaluate(penalized2),15.4,1e-12);
+  assert.match(Bench.specs[13].formula,/u\(xᵢ;5,10,4\)/);
+});
+test('高維目標函數視覺化明確標示切片且不以 1D 向量求值',()=>{
+  const plot=fs.readFileSync('plot.js','utf8'),app=fs.readFileSync('app.js','utf8');
+  assert.match(plot,/const point = Array\(dimension\)\.fill\(0\); point\[0\] = x/);
+  assert.match(plot,/二維切片搜尋空間/);
+  assert.match(plot,/其餘 \$\{dimension - 2\} 維固定為 0/);
+  assert.match(app,/currentDim: state\.currentDim/);
+  assert.match(app,/二維切片（其餘/);
+});
+test('跨函數收斂比較使用各自初始差距比例，並以 FE 為共同成本軸',()=>{
+  const f1=[10000,1000,100],f9=[400,40,4];
+  const ratios=(values,best)=>values.map(v=>Plot.normalizedGap(v,best,Math.abs(values[0]-best)));
+  assert.deepEqual(ratios(f1,0),ratios(f9,0));
+  assert.deepEqual(ratios([8,5,2],2),[1,.5,0]);
+  assert.equal(Plot.normalizedGap(0,0,0),0);
+  const plot=fs.readFileSync('plot.js','utf8');
+  assert.match(plot,/函數評估次數 FE/);
+  assert.match(plot,/相對初始最佳值差距/);
   const html=fs.readFileSync('index.html','utf8');
-  assert.match(html,/data-lab-tab="basics"/);assert.match(html,/data-lab-tab="benchmarks"/);assert.match(html,/data-lab-tab="compare"/);
-  assert.doesNotMatch(html,/data-target="unit7"|id="unit7"/);
+  assert.match(html,/固定 FE 並以多個 Seed 重複執行/);
+});
+test('單一共用實驗室：無第七單元與頂層分頁，保留單一播放控制器',()=>{
+  const html=fs.readFileSync('index.html','utf8');
+  assert.match(html,/id="functionSource"/);assert.match(html,/id="functionSelect"/);assert.match(html,/id="startExperiment"/);
+  assert.match(html,/id="playBtn"/);assert.equal((html.match(/id="playBtn"/g)||[]).length,1);
+  assert.doesNotMatch(html,/data-target="unit7"|id="unit7"|data-lab-tab=/);
+  assert.equal((html.match(/id="unit[1-6]"/g)||[]).length,6);
+  for(const id of ['labBasicTab','labBenchmarkTab','labCompareTab','labBasicPanel','labBenchmarkPanel','labComparePanel'])assert.match(html,new RegExp(`id="${id}"`));
+  assert.match(html,/role="tablist" aria-label="第五單元內容"/);
+  assert.match(html,/id="labComparePanel"[^>]*hidden/);
+  assert.match(html,/id="labBenchmarkPanel"[^>]*hidden/);
+  assert.ok(html.indexOf('benchmark-functions.js')<html.indexOf('benchmarks.js'),'純函數實作必須先於介面註冊載入');
+  const app=fs.readFileSync('app.js','utf8');assert.match(app,/setPendingFunction\(id\)/);assert.match(app,/startPending\(\)/);
+  assert.match(app,/showLabTab\(id\)/);
+  const benchmarkUI=fs.readFileSync('benchmarks.js','utf8');
+  assert.match(benchmarkUI,/Object\.keys\(global\.AEOBenchmarkFunctions\.specs\)/);
+  assert.match(benchmarkUI,/global\.AEO\.registerFunction\(`bench\$\{id\}`/);
+  assert.match(benchmarkUI,/data-benchmark-start="\$\{x\[0\]\}"/,'支援函數卡片應在執行時產生共用實驗載入按鈕');
+  assert.match(benchmarkUI,/start\.click\(\);global\.AEOApp\?\.showLabTab\('basic'\)/);
 });
 test('同 Seed 全部事件相同，換 Seed 不同，種子 0 有效',()=>{
   assert.deepEqual(AEO.run(config),AEO.run(config));

@@ -1,5 +1,6 @@
 /* AEO 教材核心控制器 (app.js)
  * 整合 Unit 5 完整演算法實驗、虛擬碼同步高亮、收斂圖、CSV 匯出與設定對話框
+ * Unit 5 新增：統一函數選擇器、待執行狀態管理、實驗歷史面板
  */
 (function (global) {
   'use strict';
@@ -44,7 +45,20 @@
       L: -5,
       U: 5,
       demo: ''
-    }
+    },
+    // Unit 5: function selection pending state
+    selectedFnSource: 'basic',  // 'basic' | 'paper'
+    selectedFnId: 'square',     // current confirmed function ID
+    pendingFnId: 'square',      // what user has selected but not yet run
+    pendingParams: {
+      fn: 'square',
+      n: 8,
+      T: 12,
+      seed: 42,
+      L: -5,
+      U: 5
+    },
+    pendingDirty: false         // true when pending differs from run
   };
 
   const fnMeta = {
@@ -54,12 +68,33 @@
     rastrigin: { desc: '二維多局部極小值（Rastrigin），強烈考驗跳脫局部陷阱的能力。', range: '[-5.12, 5.12]²' }
   };
 
+  /* ── AEO.registerFunction 橋接 ─────────────────────────── */
+  function ensureRegistered(fnId) {
+    if (global.AEO.functions[fnId]) return fnId;
+    const entry = global.AEOBench?.get(fnId);
+    if (!entry || !entry.evaluate) throw new Error('此函數尚未實作，無法執行。');
+    const engineId = 'bench' + entry.id;
+    if (!global.AEO.functions[engineId]) {
+      global.AEO.registerFunction(engineId, {
+        name: entry.name,
+        dim: entry.defaultDim,
+        L: entry.bounds.L,
+        U: entry.bounds.U,
+        multimodal: entry.category.includes('多峰'),
+        knownBest: entry.knownBest
+      }, entry.evaluate);
+    }
+    return engineId;
+  }
+
   /* ── 執行演算法 ─────────────────────────────────────────── */
   function execute() {
     stop();
     state.selected = null;
     try {
-      const started=performance.now(); state.run = global.AEO.run(state.params); state.run.elapsedMs=performance.now()-started;
+      const started = performance.now();
+      state.run = global.AEO.run(state.params);
+      state.run.elapsedMs = performance.now() - started;
     } catch (e) {
       toast('執行失敗：' + e.message);
       return;
@@ -114,10 +149,15 @@
     if (genNumEl) genNumEl.textContent = `${ev.t} / ${state.params.demo ? 1 : state.params.T}`;
 
     // Dimension buttons
-    const is2d = state.params.fn === 'sphere' || state.params.fn === 'rastrigin';
+    const dimension = global.AEO.functions[state.params.fn]?.dim || 1;
+    const is2d = dimension > 1;
     const dim1Btn = $('dim1'), dim2Btn = $('dim2');
     if (dim1Btn) dim1Btn.classList.toggle('active', !is2d || state.currentDim === 1);
-    if (dim2Btn) dim2Btn.classList.toggle('active', is2d && state.currentDim === 2);
+    if (dim2Btn) {
+      dim2Btn.classList.toggle('active', is2d && state.currentDim === 2);
+      dim2Btn.disabled = !is2d;
+    }
+    if (dim1Btn) dim1Btn.disabled = !is2d;
 
     // Pseudocode Sync
     updatePseudocode(ev);
@@ -127,6 +167,7 @@
     if (plotHost && global.AEOPlot) {
       global.AEOPlot.draw(plotHost, state.run, state.cursor, {
         selected: state.selected,
+        currentDim: state.currentDim,
         trails: state.showTrails,
         reduced: state.reducedMotion,
         onSelect: id => {
@@ -294,7 +335,8 @@
     const ev = state.run.events[state.cursor];
     const best = pop.reduce((a, b) => a.f <= b.f ? a : b);
     const worst = pop.reduce((a, b) => a.f >= b.f ? a : b);
-    const is2d = state.params.fn === 'sphere' || state.params.fn === 'rastrigin';
+    const dimension = global.AEO.functions[state.params.fn]?.dim || 1;
+    const is2d = dimension > 1 && state.currentDim === 2;
 
     const popRows = $('rows');
     if (!popRows) return;
@@ -305,13 +347,13 @@
       const isActive = p.id === ev.id;
       const isSel = p.id === state.selected;
       let badge = '';
-      if (isBest) badge = '<span style="color:var(--gold); font-weight:700">★ 最佳</span>';
-      else if (isWorst) badge = '<span style="color:var(--muted-fg)">▽ 最差</span>';
-      else if (isActive) badge = '<span style="color:var(--accent-warm); font-weight:700">▶ 更新中</span>';
+      if (isBest) badge = '<span class="badge badge-best">★ 最佳</span>';
+      else if (isWorst) badge = '<span class="badge badge-worst">▽ 最差</span>';
+      else if (isActive) badge = '<span class="badge badge-active">▶ 更新中</span>';
 
       return `<tr class="${isSel ? 'is-selected' : ''}" data-pop-id="${p.id}">
         <td><span class="ind"><i style="background:${plotColor(p.id)}"></i>P${p.id}</span></td>
-        <td>${vector(p.x)}</td>
+        <td title="${vector(p.x)}">${dimension > 3 ? `${vector(p.x.slice(0, 3))}, …（${dimension} 維）` : vector(p.x)}</td>
         <td>${number(p.f)}</td>
         <td>${badge}</td>
         <td><button class="textBtn" data-select="${p.id}">查看</button></td>
@@ -331,7 +373,7 @@
     });
 
     const popInfo = $('popInfo');
-    if (popInfo) popInfo.textContent = `族群大小 ${pop.length}　${is2d ? '二維空間' : '一維空間'}`;
+    if (popInfo) popInfo.textContent = `族群大小 ${pop.length}　${is2d ? (dimension > 2 ? `二維切片（其餘 ${dimension - 2} 維固定為 0）` : '二維空間') : (dimension > 1 ? `一維切片（其餘 ${dimension - 1} 維固定為 0）` : '一維空間')}`;
 
     // Diet breakdown
     const dietEl = $('diet');
@@ -430,7 +472,7 @@
 
     const convHost = $('conv');
     if (convHost && global.AEOPlot) {
-      const entries = [{ run: state.run, label: '本次執行' }, ...state.savedRuns];
+      const entries = [{ run: state.run, label: '本次執行', knownBest:global.AEO.functions[state.params.fn]?.knownBest ?? 0 }, ...state.savedRuns];
       global.AEOPlot.convergence(convHost, entries);
     }
 
@@ -443,9 +485,53 @@
         compareList.textContent = '尚未保存比較組。點選「保存本次設定作比較」可加入圖中對照。';
       }
     }
-    const rows=$('compareRows');
-    if(rows) rows.innerHTML=state.savedRuns.map(item=>{const best=item.run.history.at(-1)?.best??NaN, known=item.knownBest??0;return `<tr><td>${item.fnName}</td><td>${item.config.n}/${item.config.T}/${item.config.seed}</td><td>${number(best)}</td><td>${number(known)}</td><td>${number(Math.abs(best-known))}</td><td>${item.run.history.at(-1)?.fe??'—'}</td><td>${number(item.elapsedMs)}</td></tr>`;}).join('');
-    const chart=$('compareChart'); if(chart&&global.AEOPlot) global.AEOPlot.convergence(chart,[{run:state.run,label:'目前執行'},...state.savedRuns]);
+
+    renderHistoryTable();
+  }
+
+  /* ── Unit 5 歷史面板 ───────────────────────────────────── */
+  function renderHistoryTable() {
+    const rows = $('u5HistoryRows');
+    const countBadge = $('u5HistoryCount');
+    const chart = $('u5CompareChart');
+
+    if (rows) {
+      rows.innerHTML = state.savedRuns.map((item, idx) => {
+        const best = item.run.history.at(-1)?.best ?? NaN;
+        const known = item.knownBest ?? 0;
+        const dim = global.AEO.functions[item.config.fn]?.dim ?? '—';
+        const startGap = Math.abs((item.run.history[0]?.best ?? NaN) - known);
+        const normalizedGap = startGap > 0 ? Math.abs(best - known) / startGap : null;
+        return `<tr>
+          <td>${item.fnName}</td>
+          <td>${item.config.n}/${item.config.T}/${item.config.seed}</td>
+          <td>${dim}</td>
+          <td>${number(best)}</td>
+          <td>${number(known)}</td>
+          <td>${number(Math.abs(best - known))}</td>
+          <td>${normalizedGap == null ? '—' : number(normalizedGap * 100) + '%'}</td>
+          <td>${item.run.history.at(-1)?.fe ?? '—'}</td>
+          <td>${number(item.elapsedMs)}</td>
+          <td><button class="textBtn" data-del-run="${idx}">刪除</button></td>
+        </tr>`;
+      }).join('');
+
+      rows.querySelectorAll('[data-del-run]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.dataset.delRun);
+          state.savedRuns.splice(idx, 1);
+          renderHistoryTable();
+          toast('已刪除該筆實驗記錄。');
+        });
+      });
+    }
+
+    if (countBadge) countBadge.textContent = state.savedRuns.length;
+
+    if (chart && global.AEOPlot && state.run) {
+      const entries = [{ run: state.run, label: '目前執行', knownBest:global.AEO.functions[state.params.fn]?.knownBest ?? 0 }, ...state.savedRuns];
+      global.AEOPlot.convergence(chart, entries);
+    }
   }
 
   function exportCSV() {
@@ -465,13 +551,14 @@
 
   /* ── 參數設定 ───────────────────────────────────────────── */
   function populateSettings() {
+    // Pre-fill settings with PENDING params
     const fnSelect = $('fn');
-    if (fnSelect) fnSelect.value = state.params.fn;
-    if ($('n')) $('n').value = state.params.n;
-    if ($('T')) $('T').value = state.params.T;
-    if ($('L')) $('L').value = state.params.L;
-    if ($('U')) $('U').value = state.params.U;
-    if ($('seed')) $('seed').value = state.params.seed;
+    if (fnSelect) fnSelect.value = state.pendingParams.fn;
+    if ($('n')) $('n').value = state.pendingParams.n;
+    if ($('T')) $('T').value = state.pendingParams.T;
+    if ($('L')) $('L').value = state.pendingParams.L;
+    if ($('U')) $('U').value = state.pendingParams.U;
+    if ($('seed')) $('seed').value = state.pendingParams.seed;
     if ($('formulas')) $('formulas').checked = state.showFormulas;
     if ($('trails')) $('trails').checked = state.showTrails;
     if ($('reduced')) $('reduced').checked = state.reducedMotion;
@@ -515,22 +602,272 @@
     state.reducedMotion = $('reduced')?.checked ?? false;
     document.body.classList.toggle('reduced', state.reducedMotion);
 
-    const needsRerun = ['fn', 'n', 'T', 'L', 'U', 'seed'].some(k => newParams[k] !== state.params[k]);
-    state.params = newParams;
+    // Update pending state and show dirty note
+    state.pendingParams = { ...newParams };
+    state.pendingFnId = newParams.fn;
+    markPendingDirty();
 
-    if (needsRerun) {
-      execute();
-      toast('已更新參數並重新執行。');
+    // Sync u5 param inputs with new values
+    syncU5Inputs();
+
+    return true;
+  }
+
+  /* ── Unit 5: 函數資訊面板更新 ─────────────────────────── */
+  function updateU5FnInfo(fnId) {
+    // Try AEOBench first, then AEO.functions
+    const benchEntry = global.AEOBench?.get(fnId);
+    const aeoMeta = global.AEO.functions[fnId] || (benchEntry ? {
+      name: benchEntry.name,
+      dim: benchEntry.defaultDim,
+      L: benchEntry.bounds.L,
+      U: benchEntry.bounds.U,
+      knownBest: benchEntry.knownBest
+    } : null);
+
+    if (!aeoMeta && !benchEntry) return;
+
+    const name = benchEntry?.name || aeoMeta?.name || fnId;
+    const formula = benchEntry?.formula || '';
+    const desc = benchEntry?.description || fnMeta[fnId]?.desc || '';
+    const L = benchEntry?.bounds?.L ?? aeoMeta?.L ?? -5;
+    const U = benchEntry?.bounds?.U ?? aeoMeta?.U ?? 5;
+    const best = benchEntry?.knownBest ?? aeoMeta?.knownBest ?? 0;
+    const dim = benchEntry?.defaultDim ?? aeoMeta?.dim ?? 1;
+    const status = benchEntry?.status ?? 'runnable';
+
+    if ($('u5FnName')) $('u5FnName').textContent = name;
+    if ($('u5FnFormula')) $('u5FnFormula').textContent = formula;
+    if ($('u5FnDesc')) $('u5FnDesc').textContent = desc;
+    if ($('u5FnBounds')) $('u5FnBounds').textContent = `[${L}, ${U}]`;
+    if ($('u5FnBest')) $('u5FnBest').textContent = number(best);
+    if ($('u5FnDim')) $('u5FnDim').textContent = dim + 'D';
+    if ($('u5DimDisplay')) $('u5DimDisplay').textContent = dim + 'D';
+
+    // Status badge
+    const badge = $('u5FnStatusBadge');
+    if (badge) {
+      badge.textContent = status === 'runnable' ? '✓ 可執行' : status === 'preview' ? '預覽' : '不可用';
+      badge.className = 'fn-status-badge ' + status;
+    }
+
+    // Missing box and start button
+    const missingBox = $('u5FnMissingBox');
+    const startBtn = $('u5StartBtn');
+    if (status === 'preview') {
+      if (missingBox) missingBox.hidden = false;
+      if ($('u5FnMissing') && benchEntry?.missingData?.length) {
+        $('u5FnMissing').textContent = benchEntry.missingData.join('、');
+      }
+      if (startBtn) startBtn.disabled = true;
     } else {
-      updateAll();
-      toast('顯示偏好設定已更新。');
+      if (missingBox) missingBox.hidden = true;
+      if (startBtn) startBtn.disabled = false;
+    }
+
+    // Update bound inputs
+    if ($('u5L')) $('u5L').value = L;
+    if ($('u5U')) $('u5U').value = U;
+
+    // Also update pending params bounds
+    state.pendingParams.L = L;
+    state.pendingParams.U = U;
+    state.pendingParams.fn = fnId;
+  }
+
+  function syncU5Inputs() {
+    if ($('u5n')) $('u5n').value = state.pendingParams.n;
+    if ($('u5T')) $('u5T').value = state.pendingParams.T;
+    if ($('u5seed')) $('u5seed').value = state.pendingParams.seed;
+    if ($('u5L')) $('u5L').value = state.pendingParams.L;
+    if ($('u5U')) $('u5U').value = state.pendingParams.U;
+  }
+
+  function readU5Params() {
+    return {
+      fn: state.pendingFnId,
+      n: parseInt($('u5n')?.value ?? state.pendingParams.n, 10),
+      T: parseInt($('u5T')?.value ?? state.pendingParams.T, 10),
+      seed: parseInt($('u5seed')?.value ?? state.pendingParams.seed, 10),
+      L: parseFloat($('u5L')?.value ?? state.pendingParams.L),
+      U: parseFloat($('u5U')?.value ?? state.pendingParams.U),
+      demo: ''
+    };
+  }
+
+  function markPendingDirty() {
+    state.pendingDirty = true;
+    const dirtyNote = $('u5DirtyNote');
+    if (dirtyNote) {
+      dirtyNote.hidden = false;
+      dirtyNote.textContent = state.run ? '設定已修改，請重新開始實驗以套用。' : '設定已修改。';
+    }
+    const pickerDirtyNote = $('settingsDirty');
+    if (pickerDirtyNote) {
+      pickerDirtyNote.hidden = false;
+      pickerDirtyNote.textContent = state.run
+        ? '目前圖表仍是上一個實驗；按「開始新實驗」後才會載入選取函數。'
+        : '設定已修改，開始實驗後套用。';
+    }
+  }
+
+  function clearDirty() {
+    state.pendingDirty = false;
+    const dirtyNote = $('u5DirtyNote');
+    if (dirtyNote) { dirtyNote.hidden = true; dirtyNote.textContent = ''; }
+    const pickerDirtyNote = $('settingsDirty');
+    if (pickerDirtyNote) pickerDirtyNote.hidden = true;
+  }
+
+  /* ── Unit 5: 論文基準函數列表渲染 ─────────────────────── */
+  function renderBenchList() {
+    const listEl = $('u5BenchList');
+    if (!listEl || !global.AEOBench) return;
+
+    const groupEl = $('u5BenchGroup');
+    const searchEl = $('u5BenchSearch');
+    const catFilter = groupEl?.value || '';
+    const textFilter = (searchEl?.value || '').toLowerCase();
+
+    let entries = global.AEOBench.entries.filter(e => e.source === 'paper');
+    if (catFilter) entries = entries.filter(e => e.category === catFilter);
+    if (textFilter) entries = entries.filter(e =>
+      e.name.toLowerCase().includes(textFilter) ||
+      String(e.id).includes(textFilter) ||
+      (e.description || '').toLowerCase().includes(textFilter)
+    );
+
+    if (!entries.length) {
+      listEl.innerHTML = '<p style="padding:12px;color:var(--muted-fg)">無符合條件的函數。</p>';
+      return;
+    }
+
+    listEl.innerHTML = entries.map(e => {
+      const isSelected = state.pendingFnId === String(e.id);
+      const statusLabel = e.status === 'runnable' ? '✓' : '預覽';
+      return `<div class="fn-bench-item${isSelected ? ' selected' : ''}" data-bench-id="${e.id}">
+        <span class="fn-id">f${e.id}</span>
+        <span class="fn-name">${e.name}</span>
+        <span class="fn-status-badge ${e.status}">${statusLabel}</span>
+        <button class="textBtn" data-bench-select="${e.id}">選擇</button>
+      </div>`;
+    }).join('');
+
+    listEl.querySelectorAll('[data-bench-select]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.benchSelect;
+        selectPaperFunction(id);
+      });
+    });
+  }
+
+  function selectPaperFunction(id) {
+    state.pendingFnId = String(id);
+    updateU5FnInfo(id);
+    markPendingDirty();
+    renderBenchList(); // refresh selection highlight
+  }
+
+  function selectBasicFunction(id) {
+    state.pendingFnId = id;
+    updateU5FnInfo(id);
+    markPendingDirty();
+  }
+
+  /* ── Unit 5: 開始實驗按鈕 ─────────────────────────────── */
+  function handleU5Start() {
+    stop();
+
+    const params = readU5Params();
+
+    // Validate function status
+    const benchEntry = global.AEOBench?.get(state.pendingFnId);
+    if (benchEntry && benchEntry.status !== 'runnable') {
+      const errEl = $('u5ParamError');
+      if (errEl) errEl.textContent = '此函數尚未實作，無法執行。';
+      toast('此函數尚未實作，無法執行。');
+      return;
+    }
+
+    // Validate params
+    let registeredId;
+    try {
+      registeredId = ensureRegistered(state.pendingFnId);
+      params.fn = registeredId;
+      global.AEO.validate(params);
+    } catch (e) {
+      const errEl = $('u5ParamError');
+      if (errEl) errEl.textContent = e.message;
+      toast('參數錯誤：' + e.message);
+      return;
+    }
+
+    const errEl = $('u5ParamError');
+    if (errEl) errEl.textContent = '';
+
+    // Snapshot params as run params
+    state.params = { ...params };
+    state.pendingParams = { ...params };
+    state.selectedFnId = state.pendingFnId;
+    state.currentDim = (global.AEO.functions[registeredId]?.dim || 1) > 1 ? 2 : 1;
+
+    // Execute
+    execute();
+
+    // Reveal workspace
+    const workspace = $('u5Workspace');
+    if (workspace) workspace.hidden = false;
+
+    // Update run label
+    const runLabel = $('u5RunLabel');
+    const runStatus = $('u5RunStatus');
+    const fnDisplayName = global.AEO.functions[registeredId]?.name || state.pendingFnId;
+    if (runLabel) {
+      runLabel.textContent = `實驗：${fnDisplayName}，n=${params.n}，T=${params.T}，Seed=${params.seed}`;
+    }
+    if (runStatus) {
+      runStatus.textContent = state.run ? '已完成' : '執行中…';
+    }
+
+    clearDirty();
+    toast(`已開始實驗：${fnDisplayName}`);
+  }
+
+  /* ── 初始化事件綁定 ─────────────────────────────────────── */
+  const labTabs = [
+    {id:'basic', tab:'labBasicTab', panel:'labBasicPanel'},
+    {id:'benchmarks', tab:'labBenchmarkTab', panel:'labBenchmarkPanel'},
+    {id:'compare', tab:'labCompareTab', panel:'labComparePanel'}
+  ];
+  function showLabTab(id, focus = false) {
+    const selected = labTabs.find(item => item.id === id);
+    if (!selected) return false;
+    for (const item of labTabs) {
+      const tab = $(item.tab), panel = $(item.panel), active = item === selected;
+      if (!tab || !panel) continue;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-selected', String(active));
+      tab.tabIndex = active ? 0 : -1;
+      panel.hidden = !active;
+      if (active && focus) tab.focus();
     }
     return true;
   }
 
-  /* ── 初始化事件綁定 ─────────────────────────────────────── */
   function init() {
     buildPseudocode();
+    for (const item of labTabs) {
+      const tab = $(item.tab);
+      tab?.addEventListener('click', () => showLabTab(item.id));
+      tab?.addEventListener('keydown', event => {
+        if (!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+        event.preventDefault();
+        const current = labTabs.findIndex(candidate => candidate.id === item.id);
+        const next = event.key === 'Home' ? 0 : event.key === 'End' ? labTabs.length - 1 :
+          (current + (event.key === 'ArrowRight' ? 1 : labTabs.length - 1)) % labTabs.length;
+        showLabTab(labTabs[next].id, true);
+      });
+    }
     // The first visit is light by design; a saved explicit choice always wins.
     const themeToggle = $('themeToggle');
     if (themeToggle) {
@@ -582,7 +919,7 @@
     if (paramForm) {
       paramForm.addEventListener('submit', e => {
         e.preventDefault();
-        if (applySettings()) settingsDlg.close();
+        if (applySettings()) settingsDlg?.close();
       });
     }
 
@@ -655,30 +992,14 @@
     if (dim1Btn) {
       dim1Btn.addEventListener('click', () => {
         state.currentDim = 1;
-        const is2d = state.params.fn === 'sphere' || state.params.fn === 'rastrigin';
-        if (is2d) {
-          state.params.fn = state.params.fn === 'rastrigin' ? 'multi' : 'square';
-          state.params.L = global.AEO.functions[state.params.fn].L;
-          state.params.U = global.AEO.functions[state.params.fn].U;
-          execute();
-        } else {
-          updateAll();
-        }
+        updateAll();
       });
     }
 
     if (dim2Btn) {
       dim2Btn.addEventListener('click', () => {
         state.currentDim = 2;
-        const is2d = state.params.fn === 'sphere' || state.params.fn === 'rastrigin';
-        if (!is2d) {
-          state.params.fn = state.params.fn === 'multi' ? 'rastrigin' : 'sphere';
-          state.params.L = global.AEO.functions[state.params.fn].L;
-          state.params.U = global.AEO.functions[state.params.fn].U;
-          execute();
-        } else {
-          updateAll();
-        }
+        updateAll();
       });
     }
 
@@ -688,8 +1009,15 @@
       saveRunBtn.addEventListener('click', () => {
         if (!state.run) return;
         const label = `${global.AEO.functions[state.params.fn]?.name || state.params.fn} n=${state.params.n} T=${state.params.T} s=${state.params.seed}`;
-        state.savedRuns.push({ run: state.run, label, config:{...state.params}, fnName:global.AEO.functions[state.params.fn]?.name||state.params.fn, knownBest:global.AEO.functions[state.params.fn]?.knownBest??0, elapsedMs:state.run.elapsedMs??0 });
+        state.savedRuns.push({
+          run: state.run, label,
+          config: {...state.params},
+          fnName: global.AEO.functions[state.params.fn]?.name || state.params.fn,
+          knownBest: global.AEO.functions[state.params.fn]?.knownBest ?? 0,
+          elapsedMs: state.run.elapsedMs ?? 0
+        });
         updateLab();
+        renderHistoryTable();
         toast(`已保存。共 ${state.savedRuns.length} 組比較曲線。`);
       });
     }
@@ -708,9 +1036,105 @@
 
     const csvBtn = $('csv');
     if (csvBtn) csvBtn.addEventListener('click', exportCSV);
-    const saveCompare=$('saveCurrentCompare'); if(saveCompare) saveCompare.addEventListener('click',()=>{if(!state.run)return;state.savedRuns.push({run:state.run,label:`${global.AEO.functions[state.params.fn]?.name} n=${state.params.n} T=${state.params.T} seed=${state.params.seed}`,config:{...state.params},fnName:global.AEO.functions[state.params.fn]?.name||state.params.fn,knownBest:global.AEO.functions[state.params.fn]?.knownBest??0,elapsedMs:state.run.elapsedMs??0});updateLab();toast('目前結果已加入比較。');});
-    const runCompare=$('runCompare'); if(runCompare) runCompare.addEventListener('click',()=>{try{const fn=$('compareFn').value, config={...state.params,fn,n:Number($('compareN').value),T:Number($('compareT').value),seed:Number($('compareSeed').value),L:global.AEO.functions[fn].L,U:global.AEO.functions[fn].U,demo:''};global.AEO.validate(config);const t0=performance.now(),run=global.AEO.run(config),elapsedMs=performance.now()-t0;state.savedRuns.push({run,label:`${global.AEO.functions[fn].name} n=${config.n} T=${config.T} seed=${config.seed}`,config,fnName:global.AEO.functions[fn].name,knownBest:global.AEO.functions[fn].knownBest??0,elapsedMs});updateLab();$('compareStatus').textContent=`完成 ${state.savedRuns.length} 組。跨函數請比較相對誤差，不要直接比較原始目標值。`;toast('比較實驗完成。');}catch(e){$('compareStatus').textContent='參數錯誤：'+e.message;}});
-    const clearCompare=$('clearCompare'); if(clearCompare) clearCompare.addEventListener('click',()=>{state.savedRuns=[];updateLab();$('compareStatus').textContent='比較結果已清除。';});
+
+    // Legacy compare buttons (kept for backward compat, IDs may not exist)
+    const saveCompare = $('saveCurrentCompare');
+    if (saveCompare) saveCompare.addEventListener('click', () => {
+      if (!state.run) return;
+      state.savedRuns.push({
+        run: state.run,
+        label: `${global.AEO.functions[state.params.fn]?.name} n=${state.params.n} T=${state.params.T} seed=${state.params.seed}`,
+        config: {...state.params},
+        fnName: global.AEO.functions[state.params.fn]?.name || state.params.fn,
+        knownBest: global.AEO.functions[state.params.fn]?.knownBest ?? 0,
+        elapsedMs: state.run.elapsedMs ?? 0
+      });
+      updateLab();
+      toast('目前結果已加入比較。');
+    });
+    const runCompare=$('runCompare');
+    if(runCompare) runCompare.addEventListener('click',()=>{try{const fn=state.params.fn,cfg={...state.params,n:Number($('compareN').value),T:Number($('compareT').value),seed:Number($('compareSeed').value)};global.AEO.validate(cfg);const t=performance.now(),run=global.AEO.run(cfg);run.elapsedMs=performance.now()-t;state.savedRuns.push({run,label:`${global.AEO.functions[fn].name} n=${cfg.n} T=${cfg.T} seed=${cfg.seed}`,config:cfg,fnName:global.AEO.functions[fn].name,knownBest:global.AEO.functions[fn].knownBest,elapsedMs:run.elapsedMs});renderHistoryTable();updateLab();$('compareStatus').textContent=`已加入比較，共 ${state.savedRuns.length} 筆；歷史資料為獨立快照。`;toast('比較實驗完成。');}catch(e){$('compareStatus').textContent='參數錯誤：'+e.message;}});
+
+    // ── Unit 5 新增控制 ────────────────────────────────────
+
+    // fn source radio buttons
+    document.querySelectorAll('input[name="fnSource"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        state.selectedFnSource = radio.value;
+        const basicPanel = $('fnBasicPanel');
+        const paperPanel = $('fnPaperPanel');
+        if (basicPanel) basicPanel.hidden = radio.value !== 'basic';
+        if (paperPanel) paperPanel.hidden = radio.value !== 'paper';
+
+        if (radio.value === 'basic') {
+          selectBasicFunction('square');
+          // Set square radio checked
+          const sq = document.querySelector('input[name="fnChoice"][value="square"]');
+          if (sq) sq.checked = true;
+        } else {
+          // Switch to paper: select first runnable paper function
+          const first = global.AEOBench?.entries.find(e => e.source === 'paper' && e.status === 'runnable');
+          if (first) selectPaperFunction(String(first.id));
+          renderBenchList();
+        }
+        markPendingDirty();
+      });
+    });
+
+    // fn choice radio buttons (basic functions)
+    document.querySelectorAll('input[name="fnChoice"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        selectBasicFunction(radio.value);
+      });
+    });
+
+    // paper function search/filter
+    const benchGroup = $('u5BenchGroup');
+    const benchSearch = $('u5BenchSearch');
+    if (benchGroup) benchGroup.addEventListener('change', renderBenchList);
+    if (benchSearch) benchSearch.addEventListener('input', renderBenchList);
+
+    // u5 params: n, T, seed, L, U
+    ['u5n', 'u5T', 'u5seed', 'u5L', 'u5U'].forEach(id => {
+      const el = $(id);
+      if (el) {
+        el.addEventListener('input', () => {
+          state.pendingParams.n = parseInt($('u5n')?.value, 10) || state.pendingParams.n;
+          state.pendingParams.T = parseInt($('u5T')?.value, 10) || state.pendingParams.T;
+          state.pendingParams.seed = parseInt($('u5seed')?.value, 10) || state.pendingParams.seed;
+          state.pendingParams.L = parseFloat($('u5L')?.value) || state.pendingParams.L;
+          state.pendingParams.U = parseFloat($('u5U')?.value) || state.pendingParams.U;
+          markPendingDirty();
+        });
+      }
+    });
+
+    // u5StartBtn
+    const startBtn = $('u5StartBtn');
+    if (startBtn) startBtn.addEventListener('click', handleU5Start);
+    const newStart=$('startExperiment'); if(newStart) newStart.addEventListener('click',handleU5Start);
+    ['u5n','u5T','u5seed'].forEach(id=>$(id)?.addEventListener('input',()=>{state.pendingParams.n=parseInt($('u5n').value,10)||state.pendingParams.n;state.pendingParams.T=parseInt($('u5T').value,10)||state.pendingParams.T;state.pendingParams.seed=parseInt($('u5seed').value,10)||0;markPendingDirty();}));
+
+    // u5 history panel
+    const clearHistoryBtn = $('u5ClearHistory');
+    if (clearHistoryBtn) {
+      clearHistoryBtn.addEventListener('click', () => {
+        state.savedRuns = [];
+        renderHistoryTable();
+        updateLab();
+        toast('實驗歷史已清除。');
+      });
+    }
+
+    const exportCsvBtn = $('u5ExportCSV');
+    if (exportCsvBtn) exportCsvBtn.addEventListener('click', exportCSV);
+
+    // Initialize bench list if AEOBench is available
+    if (global.AEOBench) renderBenchList();
+
+    // Initialize u5 fn info with default function
+    updateU5FnInfo('square');
+    syncU5Inputs();
 
     // Keyboard shortcuts
     document.addEventListener('keydown', e => {
@@ -727,14 +1151,38 @@
   // Export
   global.AEOApp = {
     init,
+    setPendingFunction(id) {
+      const spec=global.AEO.functions[id]; if(!spec) { toast('此函數尚未註冊，不能執行。'); return false; }
+      const unchanged = state.pendingFnId === id && state.pendingParams.L === spec.L && state.pendingParams.U === spec.U &&
+        state.params.fn === id && state.params.L === spec.L && state.params.U === spec.U;
+      if (!unchanged) stop();
+      state.pendingFnId=id; state.pendingFnSource=id.startsWith('bench')?'paper':'basic';
+      state.pendingParams={...state.pendingParams,fn:id,L:spec.L,U:spec.U};
+      updateU5FnInfo(id); syncU5Inputs();
+      if (unchanged) clearDirty(); else markPendingDirty();
+      return true;
+    },
+    startPending() { return handleU5Start(); },
     loadFunction(id) {
-      const meta=global.AEO.functions[id]; if(!meta) return toast('此函數尚未註冊，暫不支援執行。');
-      stop(); state.params.fn=id; state.params.L=meta.L; state.params.U=meta.U; state.currentDim=meta.dim;
-      state.run=null; execute(); updateAll(); toast(`${meta.name} 已載入；Seed 與族群設定保留。`);
+      const meta = global.AEO.functions[id];
+      if (!meta) return toast('此函數尚未註冊，暫不支援執行。');
+      stop();
+      state.params.fn = id; state.params.L = meta.L; state.params.U = meta.U;
+      state.currentDim = meta.dim;
+      // Also update pending state
+      state.pendingFnId = id;
+      state.pendingParams = { ...state.params };
+      state.run = null;
+      execute();
+      updateAll();
+      updateU5FnInfo(id);
+      clearDirty();
+      toast(`${meta.name} 已載入；Seed 與族群設定保留。`);
     },
     onShow() {
       if (state.run) updateAll();
-    }
+    },
+    showLabTab(id) { return showLabTab(id); }
   };
 
   // Start when DOM is ready

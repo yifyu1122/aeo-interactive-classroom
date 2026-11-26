@@ -624,7 +624,13 @@ x' = x_best + D × (e × x_best − h × xᵢ)</pre>
           右側的 AEO 虛擬碼會同步高亮正在執行的步驟，讓你清楚掌握每一顆候選點的決策過程。
         </p>
       </div>
-<div class="lab-tabs" role="tablist" aria-label="實驗室分頁"><button class="lab-tab active" role="tab" aria-selected="true" data-lab-tab="basics">基礎教學</button><button class="lab-tab" role="tab" aria-selected="false" data-lab-tab="benchmarks">31 個基準函數</button><button class="lab-tab" role="tab" aria-selected="false" data-lab-tab="compare">實驗比較</button></div><div class="lab-panel" data-lab-panel="basics">
+      <div class="lab-tabs" role="tablist" aria-label="第五單元內容">
+        <button type="button" class="lab-tab active" role="tab" id="labBasicTab" aria-controls="labBasicPanel" aria-selected="true">基礎教學</button>
+        <button type="button" class="lab-tab" role="tab" id="labBenchmarkTab" aria-controls="labBenchmarkPanel" aria-selected="false" tabindex="-1">31 個基準函數</button>
+        <button type="button" class="lab-tab" role="tab" id="labCompareTab" aria-controls="labComparePanel" aria-selected="false" tabindex="-1">實驗比較</button>
+      </div>
+      <section id="labBasicPanel" class="lab-panel" role="tabpanel" aria-labelledby="labBasicTab">
+<div class="function-picker panel"><h2>目標函數與實驗設定</h2><div class="compare-controls"><label class="field">函數來源<select id="functionSource"><option value="basic">基礎教學函數</option><option value="paper">論文基準函數</option></select></label><label class="field">搜尋<input id="functionSearch" type="search" placeholder="函數編號、名稱或分類"></label><label class="field">函數<select id="functionSelect"></select></label><label class="field">族群 n<input id="u5n" type="number" min="3" max="40" value="8"></label><label class="field">迭代 T<input id="u5T" type="number" min="1" max="150" value="12"></label><label class="field">Seed<input id="u5seed" type="number" min="0" value="42"></label></div><div id="functionInfo" class="function-info"></div><button class="btn-primary" id="startExperiment">開始新實驗</button><p id="settingsDirty" hidden>設定已修改，請開始新實驗以套用。</p></div>
 
       <!-- 主工作區：左邊視覺圖，右邊虛擬碼與步驟解說 -->
       <div class="grid">
@@ -810,34 +816,6 @@ return X_best</code></pre>
         </div>
       </div>
 
-      <!-- 收斂曲線與實驗比較 -->
-      <div class="panel" style="margin-bottom:24px;">
-        <div class="panel-head">
-          <h3>收斂曲線與多次實驗比較</h3>
-          <button class="btn-outlined" id="csv">匯出 CSV 紀錄 ↓</button>
-        </div>
-        <p id="labDesc" style="color:var(--muted-fg); font-size:0.9rem; margin-bottom:12px;"></p>
-        <div id="conv" style="margin-bottom:16px;"></div>
-        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-          <button class="btn-primary" id="saveRun">保存本次設定作比較</button>
-          <button class="btn-outlined" id="rerun">重新執行</button>
-          <button class="btn-outlined" id="clearRuns">清除所有比較</button>
-        </div>
-        <p id="compareList" style="font-size:0.86rem; color:var(--muted-fg); margin-top:10px;"></p>
-
-        <details style="margin-top:16px;">
-          <summary style="font-weight:600; cursor:pointer; color:var(--accent);">檢視逐代最佳目標值與評估次數明細</summary>
-          <div class="scroll" style="margin-top:10px;">
-            <table>
-              <thead>
-                <tr><th>迭代代次 t</th><th>歷代最佳目標值</th><th>累計評估次數 (FE)</th></tr>
-              </thead>
-              <tbody id="hist"></tbody>
-            </table>
-          </div>
-        </details>
-      </div>
-
       <!-- 探索問題 (Q&A) -->
       <div class="qa-section">
         <h3>探索問題 · 演算法總結</h3>
@@ -873,14 +851,48 @@ return X_best</code></pre>
         </ol>
       </div>
       <div class="unit-actions"><button class="btn-primary" data-jump="unit6">下一步：單元 6「工程設計案例」</button></div>
-    </section>
+      </section>
+      <section id="labComparePanel" class="lab-panel" role="tabpanel" aria-labelledby="labCompareTab" hidden>
+      <!-- 收斂曲線與實驗比較 -->
+      <div class="panel" style="margin-bottom:24px;">
+        <div class="panel-head">
+          <h3>收斂曲線與多次實驗比較</h3>
+          <button class="btn-outlined" id="csv">匯出 CSV 紀錄 ↓</button>
+        </div>
+        <p id="labDesc" style="color:var(--muted-fg); font-size:0.9rem; margin-bottom:12px;"></p>
+        <div id="conv" style="margin-bottom:16px;"></div>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <button class="btn-primary" id="saveRun">保存本次設定作比較</button>
+          <button class="btn-outlined" id="rerun">重新執行</button>
+          <button class="btn-outlined" id="clearRuns">清除所有比較</button>
+        </div>
+        <p id="compareList" style="font-size:0.86rem; color:var(--muted-fg); margin-top:10px;"></p>
+        <details id="historyExperiments" style="margin-top:16px;"><summary>歷史實驗比較</summary><p>曲線以各次實驗自己的初始差距正規化，橫軸使用 FE；比較跨函數的進展時，請固定 FE 並以多個 Seed 重複執行。表格的「絕對差距」適合同一函數內判讀，不作跨函數難度分數。</p><div class="compare-controls"><label class="field">族群 n<input id="compareN" type="number" min="3" max="40" value="8"></label><label class="field">迭代 T<input id="compareT" type="number" min="1" max="150" value="12"></label><label class="field">Seed<input id="compareSeed" type="number" min="0" value="42"></label><button class="btn-primary" id="runCompare">以目前函數執行比較</button></div><p id="compareStatus" aria-live="polite">尚無額外比較組。</p><div class="table-wrap"><table><thead><tr><th>函數</th><th>n/T/Seed</th><th>維度</th><th>最佳值</th><th>已知最佳</th><th>絕對差距</th><th>相對初始差距</th><th>FE</th><th>耗時 ms</th><th></th></tr></thead><tbody id="u5HistoryRows"></tbody></table></div></details>
 
+        <details style="margin-top:16px;">
+          <summary style="font-weight:600; cursor:pointer; color:var(--accent);">檢視逐代最佳目標值與評估次數明細</summary>
+          <div class="scroll" style="margin-top:10px;">
+            <table>
+              <thead>
+                <tr><th>迭代代次 t</th><th>歷代最佳目標值</th><th>累計評估次數 (FE)</th></tr>
+              </thead>
+              <tbody id="hist"></tbody>
+            </table>
+          </div>
+        </details>
+      </div>
 
-</div><section class='lab-panel' data-lab-panel='benchmarks' hidden><h2>31 個基準函數</h2><div class="panel benchmark-toolbar"><label class="field">函數分類<select id="benchmarkGroup"><option value="all">全部 31 個</option><option value="uni">單峰：f₁–f₇</option><option value="multi">多峰：f₈–f₁₃</option><option value="low">低維：f₁₄–f₂₃</option><option value="comp">複合：f₂₄–f₃₁</option></select></label><label class="field">快速搜尋<input id="benchmarkSearch" type="search" placeholder="輸入編號或名稱，例如 f9、Rastrigin"></label></div>
+      </section>
+      <section id="labBenchmarkPanel" class="lab-panel" role="tabpanel" aria-labelledby="labBenchmarkTab" hidden>
+    <details class='benchmark-directory' open><summary>論文基準函數目錄（31 題）</summary><h2>31 個基準函數</h2><div class="panel benchmark-toolbar"><label class="field">函數分類<select id="benchmarkGroup"><option value="all">全部 31 個</option><option value="uni">單峰：f₁–f₇</option><option value="multi">多峰：f₈–f₁₃</option><option value="low">低維：f₁₄–f₂₃</option><option value="comp">複合：f₂₄–f₃₁</option></select></label><label class="field">快速搜尋<input id="benchmarkSearch" type="search" placeholder="輸入編號或名稱，例如 f9、Rastrigin"></label></div>
       <div id="benchmarkGrid" class="benchmark-grid" aria-live="polite"></div>
       <details class="benchmark-note"><summary>複合函數公式如何閱讀？</summary><p>f₂₄–f₃₁ 不是單一基本函數的簡單和，而是把多個基本／混合函數分量，經平移、縮放、旋轉後依距離權重混合。論文 §3 說明這 8 題採 CEC 2014 特別場次定義；各題分量數 N 為 3 或 5，最佳值依序為 2300–3000。完整分量、位移向量與旋轉矩陣須依 CEC 2014 官方定義檔，不應自行補造。網站以通用組合公式說明結構，並連到 CEC 2014 定義來源。</p><p>一般形式：f(x)=Σᵢ wᵢ(x)[λᵢ gᵢ(Mᵢ(x−oᵢ))+bᵢ]+Fᵢ*；wᵢ 由 x 與位移 oᵢ 的距離決定，再正規化使 Σwᵢ=1。每個分量的 gᵢ、λᵢ、Mᵢ、oᵢ、bᵢ 均由對應 CEC 定義指定。</p><a href="https://github.com/P-N-S/CEC2014" target="_blank" rel="noopener">CEC 2014 定義來源</a></details>
-</section><section class='lab-panel' data-lab-panel='compare' hidden><h2>實驗比較</h2><p>以相同函數比較 n、T、Seed，或切換函數比較相對誤差；不同函數不直接用目標值大小排名。</p><div class="compare-controls"><label class="field">測試函數<select id="compareFn"><option value="square">平方函數（最佳值 0）</option><option value="multi">一維 Rastrigin（最佳值 0）</option><option value="sphere">二維 Sphere（最佳值 0）</option><option value="rastrigin">二維 Rastrigin（最佳值 0）</option><option value="bench1">f1 Sphere 30D（最佳值 0）</option><option value="bench9">f9 Rastrigin 30D（最佳值 0）</option></select></label><label class="field">族群 n<input id="compareN" type="number" min="3" max="40" value="8"></label><label class="field">迭代 T<input id="compareT" type="number" min="1" max="150" value="12"></label><label class="field">隨機種子<input id="compareSeed" type="number" min="0" value="42"></label><button class="btn-primary" id="runCompare">執行並加入比較</button><button class="btn-outlined" id="saveCurrentCompare">加入目前結果</button><button class="btn-outlined" id="clearCompare">清除比較</button></div><p id="compareStatus" aria-live="polite">尚無比較結果。</p><div id="compareChart" class="compare-chart"></div><div class="table-wrap"><table><thead><tr><th>函數</th><th>設定 n/T/Seed</th><th>最佳值</th><th>已知最佳</th><th>誤差</th><th>FE</th><th>耗時 (ms)</th></tr></thead><tbody id="compareRows"></tbody></table></div></section>
-    <section id="unit6" hidden aria-label="單元六：工程設計案例">
+</details>
+      </section>
+</section>
+
+
+<section id="unit6" hidden aria-label="單元六：工程設計案例">
       <h1 class="engineering-title">工程設計案例</h1>
       <section id="engineeringCases" class="engineering-cases" aria-label="論文工程案例"></section>
       <div class="qa-section"><h3>探索問題 · 思考與判讀</h3><p class="sub">調整參數後，先猜答案再展開說明。</p><ol class="qlist"><li><p class="q-text">目標值較小，就一定是可以使用的設計嗎？</p><details class="ans-details"><summary>查看參考答案</summary><div class="ans-body">不一定。還要檢查應力、尺寸及其他限制，違反限制的設計不是可行解。</div></details></li><li><p class="q-text">模型圖改變後，可以直接用來驗證設計安全嗎？</p><details class="ans-details"><summary>查看參考答案</summary><div class="ans-body">不可以。圖形只示意尺寸，部分案例尚未計算全部限制，也沒有模擬應力或變形。</div></details></li><li><p class="q-text">手動調整尺寸與 AEO 搜尋有什麼差別？</p><details class="ans-details"><summary>查看參考答案</summary><div class="ans-body">手動調整一次觀察一組設計；AEO 使用族群與更新規則產生多組候選解，再依設定評估比較。</div></details></li></ol></div>
@@ -984,14 +996,11 @@ return X_best</code></pre>
   <script src="engineering.js?v=constraints-20261125"></script>
   <script src="engine.js"></script>
   <script src="pseudocode.js"></script>
-  <script src="plot.js?v=theme-20261122"></script>
+      <script src="plot.js?v=normalized-fe-by-function-20261126"></script>
   <script src="lesson.js"></script>
   <script src="units.js?v=theme-20261122"></script>
-  <script src="app.js?v=pseudocode-source-20261125"></script>
-  <script src="benchmarks.js?v=integrated-tabs-20261126"></script>
+      <script src="app.js?v=single-lab-comparison-normalized-20261126"></script>
+      <script src="benchmark-functions.js?v=validated-set-20-functions-20261126"></script>
+      <script src="benchmarks.js?v=lab-tabs-card-launch-20-functions-20261126"></script>
 </body>
 </html>
-
-
-
-
